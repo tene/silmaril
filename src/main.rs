@@ -21,60 +21,13 @@ use smart_leds::{
     RGB,
     RGB8,
 };
-use stm32f1xx_hal::{
-    gpio::{
-        gpioa::{PA5, PA6, PA7},
-        gpiob::{PB10, PB11, PB12, PB13, PB14, PB15},
-        Alternate, Floating, GpioExt, Input, OpenDrain, PullDown, PushPull,
-    },
-    pac,
-    prelude::*,
-    spi::Spi,
-    stm32::{I2C2, SPI1},
-    timer::Timer,
-};
+//gpioa::{PA5, PA6, PA7},
+//gpiob::{PB10, PB11, PB12, PB13, PB14, PB15},
+//Alternate, Floating, Input, OpenDrain, PullDown, PushPull,
+//    stm32::{I2C2, SPI1},
+use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
 
-use silmaril::hsv::HSV;
-
-#[derive(Copy, Clone)]
-pub struct Demo1 {
-    count: u8,
-    color: HSV,
-    offset: i16,
-    stride: u8,
-}
-
-impl Demo1 {
-    pub fn new(count: u8, color: HSV, offset: i16) -> Self {
-        Self {
-            count,
-            color,
-            offset,
-            stride: 5,
-        }
-    }
-}
-
-impl Iterator for Demo1 {
-    type Item = HSV;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.count == 0 {
-            return None;
-        }
-        self.count -= 1;
-        if self.stride == 0 {
-            self.color.shift_hue(self.offset);
-            self.stride = 4;
-        } else {
-            self.stride -= 1;
-        }
-        if self.stride % 2 != 0 {
-            Some(self.color.shifted_hue(self.offset))
-        } else {
-            Some(self.color)
-        }
-    }
-}
+use silmaril::{effect::Demo2, effect::Drops, hsv::HSV, Lantern};
 
 #[entry]
 fn main() -> ! {
@@ -101,9 +54,8 @@ fn main() -> ! {
 
     // Configure gpio C pin 13 as a push-pull output. The `crh` register is passed to the function
     // in order to configure the port. For pins 0-7, crl should be passed instead.
-    let led = gpioc.pc13.into_push_pull_output(&mut gpioc.crh);
+    let mut led = gpioc.pc13.into_push_pull_output(&mut gpioc.crh);
     // Configure the syst timer to trigger an update every second
-    let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(100.hz());
 
     let mut afio = dp.AFIO.constrain(&mut rcc.apb2);
     let mut gpioa = dp.GPIOA.split(&mut rcc.apb2);
@@ -123,21 +75,25 @@ fn main() -> ! {
         clocks,
         &mut rcc.apb2,
     );
+
+    led.set_high().unwrap();
+
     let mut lantern = Apa102::new(spi);
 
-    let mut start_color = HSV::new(0, 255, 64);
-
-    // Wait for the timer to trigger an update and change the state of the LED
-    let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
+    // green: 512
+    // yellow: 256
+    // orange: 128
+    // red: 0
+    let start_color = HSV::new(128, 255, 128);
+    let framerate = 10.hz();
+    let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(framerate);
+    //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
+    //let mut effect = Demo2::new(start_color, 7, 4);
+    let mut effect = Drops::new(start_color);
+    let mut model = Lantern::new((0, 0, 0).into());
     loop {
-        //led.set_high().unwrap();
-        start_color.shift_hue(7);
-        let x = Demo1::new(25, start_color, 150);
-        let y = x.chain(x).chain(x).chain(x).chain(x);
-        for (i, px) in y.enumerate() {
-            buf[i] = px.into();
-        }
-        let _ = lantern.write(buf.iter().cloned());
+        effect.tick(&mut model);
+        let _ = lantern.write(model.pixels.iter().cloned());
         block!(timer.wait()).unwrap();
     }
 }
