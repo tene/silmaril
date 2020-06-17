@@ -92,6 +92,20 @@ impl HSV {
         next.shift_hue(d);
         next
     }
+    pub fn shift_val_sat(&mut self, d: i16) {
+        if d.is_negative() {
+            self.v = self.v.saturating_sub(d.abs() as u8);
+        } else {
+            self.v = self.v.saturating_add(d as u8);
+        }
+    }
+    pub fn shift_saturation_sat(&mut self, d: i16) {
+        if d.is_negative() {
+            self.s = self.s.saturating_sub(d.abs() as u8);
+        } else {
+            self.s = self.s.saturating_add(d as u8);
+        }
+    }
 }
 
 impl Into<RGB8> for HSV {

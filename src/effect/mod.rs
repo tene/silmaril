@@ -4,39 +4,13 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use smart_leds::RGB8;
 
-// TODO const generics
-pub struct Drops {
-    color: HSV,
-    drops: [(u8, u8); 16],
-    rng: SmallRng,
-}
+pub mod drops;
+pub mod rainbow;
+pub mod solid;
 
-impl Drops {
-    pub fn new(color: HSV) -> Self {
-        let mut rng = SmallRng::seed_from_u64(1234);
-        let height = 7;
-        let mut drops = [(0, 7); 16];
-        for drop in drops.iter_mut() {
-            drop.0 = rng.gen_range(0, 20);
-        }
-        Self { color, drops, rng }
-    }
-    pub fn tick(&mut self, model: &mut Lantern) {
-        model.clear();
-        for drop in self.drops.iter_mut() {
-            if self.rng.gen_ratio(1, 3) {
-                if drop.1 == 0 {
-                    drop.1 = 7;
-                    drop.0 = self.rng.gen_range(0, 20);
-                } else {
-                    drop.1 -= 1;
-                }
-            }
-            let px = model.get_cylinder_pixel(drop.0, drop.1);
-            *px = self.color.to_rgb().into();
-        }
-    }
-}
+pub use drops::Drops;
+pub use rainbow::Rainbow;
+pub use solid::Solid;
 
 // Some pixels are faster than others
 pub struct Demo2 {

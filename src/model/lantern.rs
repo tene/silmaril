@@ -2,19 +2,39 @@ use crate::hsv::HSV;
 use smart_leds::RGB8;
 
 pub struct Lantern {
-    pub color: RGB8,
-    pub pixels: [RGB8; 125],
+    pub color: HSV,
+    pub pixels: [HSV; 125],
 }
 
 impl Lantern {
-    pub fn new(color: RGB8) -> Self {
+    pub fn new(color: HSV) -> Self {
         let pixels = [color; 125];
         Self { color, pixels }
+    }
+    pub fn render(&mut self, buf: &mut [RGB8; 125]) {
+        for (src, dst) in self.pixels.iter().zip(buf.iter_mut()) {
+            *dst = src.to_rgb().into();
+        }
     }
     pub fn clear(&mut self) {
         self.pixels = [self.color; 125];
     }
-    pub fn get_cylinder_pixel(&mut self, angle: u8, height: u8) -> &mut RGB8 {
+    pub fn shift_value_all(&mut self, d: i16) {
+        for px in self.pixels.iter_mut() {
+            px.shift_val_sat(d);
+        }
+    }
+    pub fn shift_saturation_all(&mut self, d: i16) {
+        for px in self.pixels.iter_mut() {
+            px.shift_saturation_sat(d);
+        }
+    }
+    pub fn shift_hue_all(&mut self, d: i16) {
+        for px in self.pixels.iter_mut() {
+            px.shift_hue(d);
+        }
+    }
+    pub fn get_cylinder_pixel(&mut self, angle: u8, height: u8) -> &mut HSV {
         let face = (angle / 5).rem_euclid(4) as usize;
         let angle = angle.rem_euclid(20) as usize;
         let x = angle - (face * 5);
@@ -32,6 +52,7 @@ impl Lantern {
             return self.pixels.get_mut(index).unwrap();
         // face
         } else {
+            let angle = 19 - (angle + 10).rem_euclid(20);
             let base = 100;
             let r = 7usize.saturating_sub(height as usize);
             let offset = match r {

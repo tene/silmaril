@@ -23,7 +23,7 @@ edition = "2018"
 
 [profile.release]
 # gdb segfaults when loading lto=true binaries apparently
-#lto = true
+lto = true
 codegen-units = 1
 debug = true
 opt-level = "z"

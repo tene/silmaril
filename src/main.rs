@@ -27,7 +27,11 @@ use smart_leds::{
 //    stm32::{I2C2, SPI1},
 use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
 
-use silmaril::{effect::Demo2, effect::Drops, hsv::HSV, Lantern};
+use silmaril::{
+    effect::{Demo2, Drops, Rainbow, Solid},
+    hsv::{HSV, HUE_MAX},
+    Lantern,
+};
 
 #[entry]
 fn main() -> ! {
@@ -70,7 +74,7 @@ fn main() -> ! {
         spi_pins,
         &mut afio.mapr,
         apa102_spi::MODE,
-        8_000_000.hz(),
+        4_000_000.hz(),
         //24_000_000.hz(),
         clocks,
         &mut rcc.apb2,
@@ -84,13 +88,17 @@ fn main() -> ! {
     // yellow: 256
     // orange: 128
     // red: 0
-    let start_color = HSV::new(128, 255, 128);
-    let framerate = 10.hz();
+    let white = HSV::new(0, 0, 255);
+    let _black = HSV::new(0, 0, 0);
+    let start_color = HSV::new(128, 128, 255);
+    let framerate = 30.hz();
     let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(framerate);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
-    let mut effect = Drops::new(start_color);
-    let mut model = Lantern::new((0, 0, 0).into());
+    //let mut effect = Drops::new(start_color);
+    let mut effect = Rainbow::new(start_color, 32, HUE_MAX / 20);
+    //let mut effect = Solid::new(white, 0);
+    let mut model = Lantern::new(_black);
     loop {
         effect.tick(&mut model);
         let _ = lantern.write(model.pixels.iter().cloned());
