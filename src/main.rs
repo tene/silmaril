@@ -9,32 +9,29 @@
 #![no_std]
 #![no_main]
 
-extern crate panic_semihosting;
-
 use apa102_spi::Apa102;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
 use nb::block;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 use smart_leds::{
     //hsv::{hsv2rgb, Hsv},
     SmartLedsWrite,
     RGB,
     RGB8,
 };
-//gpioa::{PA5, PA6, PA7},
-//gpiob::{PB10, PB11, PB12, PB13, PB14, PB15},
-//Alternate, Floating, Input, OpenDrain, PullDown, PushPull,
-//    stm32::{I2C2, SPI1},
 use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
 
 use silmaril::{
-    effect::{Demo2, Drops, Rainbow, Solid},
+    effect::{Demo2, Drops, Rainbow, Solid, Storm},
     hsv::{HSV, HUE_MAX},
     Lantern,
 };
 
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
     // Get access to the core peripherals from the cortex-m crate
     let cp = cortex_m::Peripherals::take().unwrap();
     // Get access to the device specific peripherals from the peripheral access crate
@@ -98,6 +95,7 @@ fn main() -> ! {
     //let mut effect = Drops::new(start_color);
     let mut effect = Rainbow::new(start_color, 32, HUE_MAX / 20);
     //let mut effect = Solid::new(white, 0);
+    let mut effect = Storm::new(start_color, 0.05);
     let mut model = Lantern::new(_black);
     loop {
         effect.tick(&mut model);

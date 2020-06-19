@@ -1,7 +1,4 @@
-use crate::{
-    hsv::{HSV, HUE_MAX},
-    Lantern,
-};
+use crate::{hsv::HSV, Lantern};
 
 enum Orientation {
     Horizontal,

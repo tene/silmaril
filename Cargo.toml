@@ -34,6 +34,7 @@ cortex-m-rt = "0.6.12"
 embedded-hal = "0.2.3"
 apa102-spi = "0.3.2"
 smart-leds = "0.3.0"
+fixed = "*"
 
 [dependencies.itertools]
 version = "0.9.0"
@@ -51,8 +52,14 @@ features = ["stm32f103", "rt"]
 [dependencies.cortex-m]
 version = "0.6.2"
 
-[dependencies.cortex-m-semihosting]
-version = "0.3.5"
+[dependencies.rtt-target]
+features = ["cortex-m"]
+version = "*"
 
-[dependencies.panic-semihosting]
-version = "0.5.3"
+[dependencies.panic-rtt-target]
+features = ["cortex-m"]
+version = "*"
+
+[dependencies.num-traits]
+version = "*"
+default-features = false

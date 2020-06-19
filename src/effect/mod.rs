@@ -1,4 +1,4 @@
-use crate::{hsv::HSV, Lantern};
+use crate::hsv::HSV;
 use itertools::izip;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
@@ -7,10 +7,12 @@ use smart_leds::RGB8;
 pub mod drops;
 pub mod rainbow;
 pub mod solid;
+pub mod storm;
 
 pub use drops::Drops;
 pub use rainbow::Rainbow;
 pub use solid::Solid;
+pub use storm::Storm;
 
 // Some pixels are faster than others
 pub struct Demo2 {
