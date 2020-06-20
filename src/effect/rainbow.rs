@@ -1,4 +1,5 @@
-use crate::{hsv::HSV, Lantern};
+use crate::{Color, Lantern, Unit};
+use palette::Hue;
 
 pub enum Orientation {
     Horizontal,
@@ -7,15 +8,17 @@ pub enum Orientation {
 }
 
 pub struct Rainbow {
-    color: HSV,
-    speed: i16,
-    step: i16,
+    color: Color,
+    speed: Unit,
+    step: Unit,
     orient: Orientation,
 }
 
 impl Rainbow {
-    pub fn new(color: HSV, speed: i16, step: i16) -> Self {
+    pub fn new<T: Into<Unit>>(color: Color, speed: T, step: T) -> Self {
         let orient = Orientation::Spiral;
+        let speed = speed.into();
+        let step = step.into();
         Self {
             color,
             speed,
@@ -30,12 +33,24 @@ impl Rainbow {
                 let px = model.get_cylinder_pixel(angle, height);
                 use Orientation::*;
                 match self.orient {
-                    Horizontal => *px = self.color.shifted_hue(angle as i16 * self.step),
-                    Vertical => *px = self.color.shifted_hue(height as i16 * self.step),
-                    Spiral => {
+                    Horizontal => {
                         *px = self
                             .color
-                            .shifted_hue(height as i16 * self.step + angle as i16 * self.step)
+                            .clone()
+                            .shift_hue(self.step.wrapping_mul_int(angle as i32))
+                    }
+                    Vertical => {
+                        *px = self
+                            .color
+                            .clone()
+                            .shift_hue(self.step.wrapping_mul_int(height as i32))
+                    }
+                    Spiral => {
+                        *px = self.color.clone().shift_hue(
+                            self.step
+                                .wrapping_mul_int(height as i32)
+                                .wrapping_add(self.step.wrapping_mul_int(angle as i32)),
+                        )
                     }
                 }
             }

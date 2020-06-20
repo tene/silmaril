@@ -25,8 +25,8 @@ pub struct HSV {
 }
 
 impl HSV {
-    pub const fn new(h: i16, s: u8, v: u8) -> Self {
-        let h: u16 = (((h % HUE_MAX) + HUE_MAX) % HUE_MAX) as u16;
+    pub fn new(h: i16, s: u8, v: u8) -> Self {
+        let h = h.rem_euclid(HUE_MAX) as u16;
         Self { h, s, v }
     }
     // From http://www.vagrearg.org/content/hsvrgb

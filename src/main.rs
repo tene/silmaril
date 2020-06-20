@@ -5,7 +5,6 @@
 //! Note: Without additional hardware, PC13 should not be used to drive an LED, see page 5.1.2 of
 //! the reference manual for an explanation. This is not an issue on the blue pill.
 
-#![deny(unsafe_code)]
 #![no_std]
 #![no_main]
 
@@ -13,16 +12,35 @@ use apa102_spi::Apa102;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
 use nb::block;
-use panic_rtt_target as _;
-use rtt_target::{rprintln, rtt_init_print};
+use rtt_target::{rprintln, rtt_init};
 use smart_leds::SmartLedsWrite;
 use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
 
-use silmaril::{effect::*, hsv::HSV, Lantern};
+extern crate panic_semihosting;
+//use panic_rtt_target as _;
+
+use silmaril::{effect::*, Color, Lantern, Unit};
 
 #[entry]
 fn main() -> ! {
-    rtt_init_print!();
+    let _channels = rtt_init! {
+        up: {
+            0: { // channel number
+                size: 10240 // buffer size in bytes
+                mode: NoBlockSkip // mode (optional, default: NoBlockSkip, see enum ChannelMode)
+                name: "Terminal" // name (optional, default: no name)
+            }
+            1: {
+                size: 32
+            }
+        }
+        down: {
+            0: {
+                size: 16
+                name: "Terminal"
+            }
+        }
+    };
     // Get access to the core peripherals from the cortex-m crate
     let cp = cortex_m::Peripherals::take().unwrap();
     // Get access to the device specific peripherals from the peripheral access crate
@@ -76,22 +94,24 @@ fn main() -> ! {
     // yellow: 256
     // orange: 128
     // red: 0
-    let _white = HSV::new(0, 0, 255);
-    let _black = HSV::new(0, 0, 0);
-    let start_color = HSV::new(128, 128, 255);
+    // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
+    let _black: Color = Color::new::<Unit>(0.0.into(), 0.0.into(), 0.0.into());
+    let start_color = Color::new::<Unit>(0.5.into(), 0.5.into(), 0.0.into());
     let framerate = 30.hz();
     let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(framerate);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
-    //let mut effect = Rainbow::new(start_color, 32, HUE_MAX / 20);
     //let mut effect = Solid::new(white, 0);
-    let mut effect = Storm::new(start_color, 0.05);
+    //let mut effect = Storm::new(start_color, 0.05);
+    let mut effect = Rainbow::new(start_color, 0.1, 0.05);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     loop {
         effect.tick(&mut model);
-        let _ = lantern.write(model.pixels.iter().cloned());
+        let mut buf = [[0; 3]; 125];
+        model.render(&mut buf);
+        let _ = lantern.write(buf.iter().cloned());
         block!(timer.wait()).unwrap();
     }
 }

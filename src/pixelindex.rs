@@ -3,8 +3,10 @@ use core::marker::PhantomData;
 
 pub trait PixelIndexable {
     type Face;
+    const SIZE: usize;
     fn get(&self, idx: PixelIndex<Self>) -> HSV;
     fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut HSV;
+    fn index_to_cylindrical_coords(idx: PixelIndex<Self>) -> ();
 }
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct PixelIndex<T: ?Sized>(usize, PhantomData<T>);

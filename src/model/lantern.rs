@@ -1,40 +1,40 @@
-use crate::hsv::HSV;
-use smart_leds::RGB8;
+use crate::{lch_to_rgb, Color, Unit};
+use palette::{Hue, Saturate, Shade};
 
 pub struct Lantern {
-    pub color: HSV,
-    pub pixels: [HSV; 125],
+    pub color: Color,
+    pub pixels: [Color; 125],
 }
 
 impl Lantern {
-    pub fn new(color: HSV) -> Self {
+    pub fn new(color: Color) -> Self {
         let pixels = [color; 125];
         Self { color, pixels }
     }
-    pub fn render(&mut self, buf: &mut [RGB8; 125]) {
-        for (src, dst) in self.pixels.iter().zip(buf.iter_mut()) {
-            *dst = src.to_rgb().into();
+    pub fn render(&mut self, buf: &mut [[u8; 3]; 125]) {
+        for (&src, dst) in self.pixels.iter().zip(buf.iter_mut()) {
+            *dst = lch_to_rgb(src);
         }
     }
     pub fn clear(&mut self) {
         self.pixels = [self.color; 125];
     }
-    pub fn shift_value_all(&mut self, d: i16) {
+    pub fn darken(&mut self, d: Unit) {
         for px in self.pixels.iter_mut() {
-            px.shift_val_sat(d);
+            *px = px.darken(d);
         }
     }
-    pub fn shift_saturation_all(&mut self, d: i16) {
+    pub fn saturate(&mut self, d: Unit) {
         for px in self.pixels.iter_mut() {
-            px.shift_saturation_sat(d);
+            *px = px.saturate(d);
         }
     }
-    pub fn shift_hue_all(&mut self, d: i16) {
+    pub fn shift_hue_all(&mut self, d: Unit) {
         for px in self.pixels.iter_mut() {
-            px.shift_hue(d);
+            *px = px.shift_hue(d);
         }
     }
-    pub fn get_cylinder_pixel(&mut self, angle: u8, height: u8) -> &mut HSV {
+    pub fn get_cylinder_pixel(&mut self, angle: u8, height: u8) -> &mut Color {
         let face = (angle / 5).rem_euclid(4) as usize;
         let angle = angle.rem_euclid(20) as usize;
         let x = angle - (face * 5);
