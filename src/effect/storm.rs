@@ -1,12 +1,12 @@
 use crate::{
     hsv::{HSV, HUE_MAX},
-    math::{noise::Simplex, Fix},
+    math::noise::Simplex,
     Lantern,
 };
-use num_traits::float::FloatCore;
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
-use rtt_target::rprintln;
+//use num_traits::float::FloatCore;
+//use rand::rngs::SmallRng;
+//use rand::{Rng, SeedableRng};
+//use rtt_target::rprintln;
 pub struct Storm {
     color: HSV,
     speed: f32,
@@ -36,7 +36,7 @@ impl Storm {
                 let hue = ((val + 1.0) * (HUE_MAX as f32) / 2.0) as i16;
                 let val: u8 = ((val + 1.0) * 100.0) as u8;
                 let px = model.get_cylinder_pixel(angle, height);
-                *px = HSV::new(hue, 16, val);
+                *px = self.color.shifted_hue(hue).with_val(val);
             }
         }
         self.offset += self.speed;

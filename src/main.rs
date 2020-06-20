@@ -15,19 +15,10 @@ use embedded_hal::digital::v2::OutputPin;
 use nb::block;
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
-use smart_leds::{
-    //hsv::{hsv2rgb, Hsv},
-    SmartLedsWrite,
-    RGB,
-    RGB8,
-};
+use smart_leds::SmartLedsWrite;
 use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
 
-use silmaril::{
-    effect::{Demo2, Drops, Rainbow, Solid, Storm},
-    hsv::{HSV, HUE_MAX},
-    Lantern,
-};
+use silmaril::{effect::*, hsv::HSV, Lantern};
 
 #[entry]
 fn main() -> ! {
@@ -85,7 +76,7 @@ fn main() -> ! {
     // yellow: 256
     // orange: 128
     // red: 0
-    let white = HSV::new(0, 0, 255);
+    let _white = HSV::new(0, 0, 255);
     let _black = HSV::new(0, 0, 0);
     let start_color = HSV::new(128, 128, 255);
     let framerate = 30.hz();
@@ -93,10 +84,11 @@ fn main() -> ! {
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
-    let mut effect = Rainbow::new(start_color, 32, HUE_MAX / 20);
+    //let mut effect = Rainbow::new(start_color, 32, HUE_MAX / 20);
     //let mut effect = Solid::new(white, 0);
     let mut effect = Storm::new(start_color, 0.05);
     let mut model = Lantern::new(_black);
+    rprintln!("Starting loop");
     loop {
         effect.tick(&mut model);
         let _ = lantern.write(model.pixels.iter().cloned());

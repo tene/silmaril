@@ -1,6 +1,6 @@
 use crate::{hsv::HSV, Lantern};
 
-enum Orientation {
+pub enum Orientation {
     Horizontal,
     Vertical,
     Spiral,

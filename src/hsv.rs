@@ -106,6 +106,15 @@ impl HSV {
             self.s = self.s.saturating_add(d as u8);
         }
     }
+    pub fn with_hue(&self, h: u16) -> Self {
+        Self { h, ..*self }
+    }
+    pub fn with_sat(&self, s: u8) -> Self {
+        Self { s, ..*self }
+    }
+    pub fn with_val(&self, v: u8) -> Self {
+        Self { v, ..*self }
+    }
 }
 
 impl Into<RGB8> for HSV {
