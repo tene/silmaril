@@ -21,8 +21,8 @@ impl Drops {
         Self { drops, rng }
     }
     pub fn tick(&mut self, model: &mut Lantern) {
-        model.darken(0.1.into());
-        model.saturate(0.2.into());
+        model.darken(0.1);
+        model.saturate(0.2);
         //model.shift_hue_all(50);
         for (color, angle, height) in self.drops.iter_mut() {
             if self.rng.gen_ratio(1, 10) {

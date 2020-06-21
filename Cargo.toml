@@ -23,7 +23,7 @@ edition = "2018"
 
 [profile.release]
 # gdb segfaults when loading lto=true binaries apparently
-#lto = true
+lto = true
 codegen-units = 1
 debug = true
 opt-level = "z"
@@ -34,9 +34,9 @@ cortex-m-rt = "0.6.12"
 embedded-hal = "0.2.3"
 apa102-spi = "0.3.2"
 smart-leds = "0.3.0"
-fixed = "*"
-#az = "*"
+#fixed = "*"
 panic-semihosting = "*"
+
 
 [dependencies.itertools]
 version = "0.9.0"

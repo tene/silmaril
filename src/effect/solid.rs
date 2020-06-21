@@ -1,14 +1,17 @@
-use crate::{Color, Lantern, Unit};
+use crate::{Color, Lantern};
 use palette::Hue;
 
 pub struct Solid {
     color: Color,
-    speed: Unit,
+    speed: f32,
 }
 
 impl Solid {
-    pub fn new(color: Color, speed: Unit) -> Self {
-        Self { color, speed }
+    pub fn new<T: Into<f32>>(color: Color, speed: T) -> Self {
+        Self {
+            color,
+            speed: speed.into(),
+        }
     }
     pub fn tick(&mut self, model: &mut Lantern) {
         self.color = self.color.shift_hue(self.speed);

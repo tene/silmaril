@@ -1,4 +1,4 @@
-use crate::{lch_to_rgb, Color, Unit};
+use crate::{lch_to_rgb, Color};
 use palette::{Hue, Saturate, Shade};
 
 pub struct Lantern {
@@ -19,19 +19,19 @@ impl Lantern {
     pub fn clear(&mut self) {
         self.pixels = [self.color; 125];
     }
-    pub fn darken(&mut self, d: Unit) {
+    pub fn darken<T: Into<f32> + Copy>(&mut self, d: T) {
         for px in self.pixels.iter_mut() {
-            *px = px.darken(d);
+            *px = px.darken(d.into());
         }
     }
-    pub fn saturate(&mut self, d: Unit) {
+    pub fn saturate<T: Into<f32> + Copy>(&mut self, d: T) {
         for px in self.pixels.iter_mut() {
-            *px = px.saturate(d);
+            *px = px.saturate(d.into());
         }
     }
-    pub fn shift_hue_all(&mut self, d: Unit) {
+    pub fn shift_hue_all<T: Into<f32> + Copy>(&mut self, d: T) {
         for px in self.pixels.iter_mut() {
-            *px = px.shift_hue(d);
+            *px = px.shift_hue(d.into());
         }
     }
     pub fn get_cylinder_pixel(&mut self, angle: u8, height: u8) -> &mut Color {

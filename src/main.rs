@@ -12,18 +12,18 @@ use apa102_spi::Apa102;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
 use nb::block;
-use rtt_target::{rprintln, rtt_init};
+use rtt_target::{rprintln, rtt_init, set_print_channel};
 use smart_leds::SmartLedsWrite;
 use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
 
 extern crate panic_semihosting;
 //use panic_rtt_target as _;
 
-use silmaril::{effect::*, Color, Lantern, Unit};
+use silmaril::{effect::*, lch_color, Lantern};
 
 #[entry]
 fn main() -> ! {
-    let _channels = rtt_init! {
+    let channels = rtt_init! {
         up: {
             0: { // channel number
                 size: 10240 // buffer size in bytes
@@ -41,6 +41,7 @@ fn main() -> ! {
             }
         }
     };
+    set_print_channel(channels.up.0);
     // Get access to the core peripherals from the cortex-m crate
     let cp = cortex_m::Peripherals::take().unwrap();
     // Get access to the device specific peripherals from the peripheral access crate
@@ -95,23 +96,28 @@ fn main() -> ! {
     // orange: 128
     // red: 0
     // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
-    let _black: Color = Color::new::<Unit>(0.0.into(), 0.0.into(), 0.0.into());
-    let start_color = Color::new::<Unit>(0.5.into(), 0.5.into(), 0.0.into());
-    let framerate = 30.hz();
+    let _black = lch_color(0.0, 0.0, 0.0);
+    let start_color = lch_color(20.0, 50.0, 0.0);
+    let framerate = 2.hz();
     let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(framerate);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
-    //let mut effect = Storm::new(start_color, 0.05);
-    let mut effect = Rainbow::new(start_color, 0.1, 0.05);
+    let mut effect = Storm::new(start_color, 0.05);
+    //let mut effect = Rainbow::new(start_color, 10.0, 360.0 / 10.0);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     loop {
         effect.tick(&mut model);
+        //rprintln!("Tick Complete");
+        rprintln!("Color: {:?}", effect.color);
         let mut buf = [[0; 3]; 125];
         model.render(&mut buf);
+        rprintln!("Render Complete: {:?}", buf[0]);
         let _ = lantern.write(buf.iter().cloned());
-        block!(timer.wait()).unwrap();
+        //rprintln!("Write Complete");
+        //block!(timer.wait()).unwrap();
+        //rprintln!("Sleep Complete");
     }
 }
