@@ -31,11 +31,11 @@ opt-level = "z"
 [dependencies]
 nb = "0.1.2"
 cortex-m-rt = "0.6.12"
-embedded-hal = "0.2.3"
+embedded-hal = "0.2.4"
 apa102-spi = "0.3.2"
 smart-leds = "0.3.0"
 #fixed = "*"
-panic-semihosting = "*"
+panic-semihosting = "0.5.3"
 
 
 [dependencies.itertools]
@@ -47,23 +47,23 @@ version = "0.7.3"
 default-features = false
 features = ["small_rng"]
 
-[dependencies.stm32f1xx-hal]
-version = "0.5.3"
-features = ["stm32f103", "rt"]
+[dependencies.stm32f4xx-hal]
+version = "0.8.3"
+features = ["stm32f411", "rt"]
 
 [dependencies.cortex-m]
 version = "0.6.2"
 
 [dependencies.rtt-target]
 features = ["cortex-m"]
-version = "*"
+version = "0.2.0"
 
 #[dependencies.panic-rtt-target]
 #features = ["cortex-m"]
 #version = "*"
 
 [dependencies.num-traits]
-version = "*"
+version = "0.2.12"
 default-features = false
 features = ["libm"]
 

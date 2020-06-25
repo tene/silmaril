@@ -11,10 +11,10 @@
 use apa102_spi::Apa102;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
-use nb::block;
+//use nb::block;
 use rtt_target::{rprintln, rtt_init, set_print_channel};
 use smart_leds::SmartLedsWrite;
-use stm32f1xx_hal::{gpio::GpioExt, pac, prelude::*, spi::Spi, timer::Timer};
+use stm32f4xx_hal::{gpio::GpioExt, prelude::*, spi::Spi, stm32 as pac};
 
 extern crate panic_semihosting;
 //use panic_rtt_target as _;
@@ -43,48 +43,42 @@ fn main() -> ! {
     };
     set_print_channel(channels.up.0);
     // Get access to the core peripherals from the cortex-m crate
-    let cp = cortex_m::Peripherals::take().unwrap();
+    let _cp = cortex_m::Peripherals::take().unwrap();
     // Get access to the device specific peripherals from the peripheral access crate
     let dp = pac::Peripherals::take().unwrap();
 
     // Take ownership over the raw flash and rcc devices and convert them into the corresponding
     // HAL structs
-    let mut flash = dp.FLASH.constrain();
-    let mut rcc = dp.RCC.constrain();
+    //let mut flash = dp.FLASH.constrain();
+    let rcc = dp.RCC.constrain();
 
     // Freeze the configuration of all the clocks in the system and store the frozen frequencies in
     // `clocks`
-    let clocks = rcc
-        .cfgr
-        .use_hse(8.mhz())
-        .sysclk(24.mhz())
-        .freeze(&mut flash.acr);
+    let clocks = rcc.cfgr.use_hse(25.mhz()).sysclk(100.mhz()).freeze();
 
     // Acquire the GPIOC peripheral
-    let mut gpioc = dp.GPIOC.split(&mut rcc.apb2);
+    let gpioc = dp.GPIOC.split();
 
     // Configure gpio C pin 13 as a push-pull output. The `crh` register is passed to the function
     // in order to configure the port. For pins 0-7, crl should be passed instead.
-    let mut led = gpioc.pc13.into_push_pull_output(&mut gpioc.crh);
+    let mut led = gpioc.pc13.into_push_pull_output();
     // Configure the syst timer to trigger an update every second
 
-    let mut afio = dp.AFIO.constrain(&mut rcc.apb2);
-    let mut gpioa = dp.GPIOA.split(&mut rcc.apb2);
+    //let mut afio = dp.AFIO.constrain();
+    let gpioa = dp.GPIOA.split();
 
-    let pa5 = gpioa.pa5.into_alternate_push_pull(&mut gpioa.crl);
-    let pa6 = gpioa.pa6.into_floating_input(&mut gpioa.crl);
-    let pa7 = gpioa.pa7.into_alternate_push_pull(&mut gpioa.crl);
+    let pa5 = gpioa.pa5.into_alternate_af5();
+    let pa6 = gpioa.pa6.into_alternate_af5();
+    let pa7 = gpioa.pa7.into_alternate_af5();
 
     let spi_pins = (pa5, pa6, pa7);
     let spi = Spi::spi1(
         dp.SPI1,
         spi_pins,
-        &mut afio.mapr,
         apa102_spi::MODE,
         4_000_000.hz(),
         //24_000_000.hz(),
         clocks,
-        &mut rcc.apb2,
     );
 
     led.set_high().unwrap();
@@ -98,8 +92,8 @@ fn main() -> ! {
     // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
     let _black = lch_color(0.0, 0.0, 0.0);
     let start_color = lch_color(20.0, 50.0, 0.0);
-    let framerate = 2.hz();
-    let mut timer = Timer::syst(cp.SYST, &clocks).start_count_down(framerate);
+    //let framerate = 2.hz();
+    //let mut timer = Timer::syst(cp.SYST, framerate, clocks);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
@@ -108,13 +102,18 @@ fn main() -> ! {
     //let mut effect = Rainbow::new(start_color, 10.0, 360.0 / 10.0);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
+    let mut ctr = 0usize;
     loop {
         effect.tick(&mut model);
-        //rprintln!("Tick Complete");
-        rprintln!("Color: {:?}", effect.color);
+        ctr += 1;
+        if ctr == 10 {
+            rprintln!("10 Ticks Complete");
+            ctr = 0;
+        }
+        //rprintln!("Color: {:?}", effect.color);
         let mut buf = [[0; 3]; 125];
         model.render(&mut buf);
-        rprintln!("Render Complete: {:?}", buf[0]);
+        //rprintln!("Render Complete: {:?}", buf[0]);
         let _ = lantern.write(buf.iter().cloned());
         //rprintln!("Write Complete");
         //block!(timer.wait()).unwrap();
