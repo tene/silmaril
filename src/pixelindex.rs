@@ -1,46 +1,89 @@
-use crate::hsv::HSV;
+use crate::Color;
 use core::marker::PhantomData;
 
 pub trait PixelIndexable {
     type Face;
     const SIZE: usize;
-    fn get(&self, idx: PixelIndex<Self>) -> HSV;
-    fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut HSV;
-    fn index_to_cylindrical_coords(idx: PixelIndex<Self>) -> ();
+    const FACES: usize;
+    fn get(&self, idx: PixelIndex<Self>) -> Color;
+    fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color;
+    fn index_to_face(idx: PixelIndex<Self>) -> Self::Face;
+    fn index_to_cylindrical_coords(idx: PixelIndex<Self>) -> (f32, f32, f32);
+    fn index_to_cone_coords(idx: PixelIndex<Self>) -> (f32, f32);
+    fn index_to_face_xy(idx: PixelIndex<Self>) -> (Self::Face, f32, f32);
+    fn index_to_cube_xyz(idx: PixelIndex<Self>) -> (f32, f32, f32);
+    fn index_to_face_polar(idx: PixelIndex<Self>) -> (Self::Face, f32, f32);
+    fn index_to_spherical(idx: PixelIndex<Self>) -> (f32, f32);
+    // XXX TODO Should this be Option?  Wrapping variant?
+    fn index_above(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
+    fn index_below(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
+    fn index_left(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
+    fn index_right(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
+    fn index_rotate_x(idx: PixelIndex<Self>, turns: f32) -> Option<PixelIndex<Self>>;
+    fn index_rotate_y(idx: PixelIndex<Self>, turns: f32) -> Option<PixelIndex<Self>>;
+    fn index_rotate_z(idx: PixelIndex<Self>, turns: f32) -> Option<PixelIndex<Self>>;
+    //fn iter_around(idx: PixelIndex<Self>) -> dyn Iterator<Item = PixelIndex<Self>>;
+    //fn iter_pixels(&mut self) -> dyn Iterator<Item = PixelIndex<Self>>;
+    //fn iter_neighbours
 }
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct PixelIndex<T: ?Sized>(usize, PhantomData<T>);
-impl<T> PixelIndex<T> where T: PixelIndexable {}
+impl<T> PixelIndex<T>
+where
+    T: PixelIndexable,
+{
+    pub fn face(self) -> T::Face {
+        T::index_to_face(self)
+    }
+    pub fn as_cylindrical(self) -> (f32, f32, f32) {
+        T::index_to_cylindrical_coords(self)
+    }
+    pub fn up(self) -> Option<Self> {
+        T::index_above(self)
+    }
+    pub fn down(self) -> Option<Self> {
+        T::index_above(self)
+    }
+    pub fn left(self) -> Option<Self> {
+        T::index_above(self)
+    }
+    pub fn right(self) -> Option<Self> {
+        T::index_above(self)
+    }
+    /*pub fn around(self) -> dyn Iterator<Item = Self> {
+        T::iter_around(self)
+    }*/
+}
 
 impl<T> PixelIndex<T> {
-    pub fn get(self, xs: &[HSV]) -> Option<&HSV> {
+    pub fn get(self, xs: &[Color]) -> Option<&Color> {
         xs.get(self.0 as usize)
     }
-    pub fn get_mut(self, xs: &mut [HSV]) -> Option<&mut HSV> {
+    pub fn get_mut(self, xs: &mut [Color]) -> Option<&mut Color> {
         xs.get_mut(self.0 as usize)
     }
 }
-impl<T> ::core::ops::Index<PixelIndex<T>> for [HSV] {
-    type Output = HSV;
-    fn index(&self, index: PixelIndex<T>) -> &HSV {
+impl<T> ::core::ops::Index<PixelIndex<T>> for [Color] {
+    type Output = Color;
+    fn index(&self, index: PixelIndex<T>) -> &Color {
         &self[index.0 as usize]
     }
 }
-impl<T> ::core::ops::IndexMut<PixelIndex<T>> for [HSV] {
-    fn index_mut(&mut self, index: PixelIndex<T>) -> &mut HSV {
+impl<T> ::core::ops::IndexMut<PixelIndex<T>> for [Color] {
+    fn index_mut(&mut self, index: PixelIndex<T>) -> &mut Color {
         &mut self[index.0 as usize]
     }
 }
 /*
 // XXX TODO Heapless vec?
-impl<T> ::core::ops::Index<PixelIndex<T>> for Vec<HSV> {
-    type Output = HSV;
-    fn index(&self, index: PixelIndex<T>) -> &HSV {
+impl<T> ::core::ops::Index<PixelIndex<T>> for Vec<Color> {
+    type Output = Color;
+    fn index(&self, index: PixelIndex<T>) -> &Color {
         &self.as_slice()[index]
     }
 }
-impl<T> ::core::ops::IndexMut<PixelIndex<T>> for Vec<HSV> {
-    fn index_mut(&mut self, index: PixelIndex<T>) -> &mut HSV {
+impl<T> ::core::ops::IndexMut<PixelIndex<T>> for Vec<Color> {
+    fn index_mut(&mut self, index: PixelIndex<T>) -> &mut Color {
         &mut self.as_mut_slice()[index]
     }
 }

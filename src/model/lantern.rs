@@ -1,4 +1,4 @@
-use crate::{lch_to_rgb, Color};
+use crate::{lch_to_rgb, pixelindex::*, Color};
 use palette::{Hue, Saturate, Shade};
 
 pub struct Lantern {
@@ -67,5 +67,47 @@ impl Lantern {
             } - 1;
             return self.pixels.get_mut(base + offset).unwrap();
         }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum LanternFace {
+    North,
+    East,
+    South,
+    West,
+    Top,
+}
+
+impl PixelIndexable for Lantern {
+    type Face = LanternFace;
+    const SIZE: usize = 125;
+    const FACES: usize = 5;
+    fn get(&self, idx: PixelIndex<Self>) -> Color {
+        self.pixels[idx]
+    }
+    fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color {
+        &mut self.pixels[idx]
+    }
+    fn index_to_cylindrical_coords(idx: PixelIndex<Self>) -> (f32, f32, f32) {
+        todo!()
+    }
+    fn index_to_cone_coords(idx: PixelIndex<Self>) -> (f32, f32) {
+        todo!()
+    }
+    fn index_to_face_xy(idx: PixelIndex<Self>) -> (usize, f32, f32) {
+        todo!()
+    }
+    fn index_above(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        todo!()
+    }
+    fn index_below(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        todo!()
+    }
+    fn index_left(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        todo!()
+    }
+    fn index_right(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        todo!()
     }
 }
