@@ -29,9 +29,9 @@ impl Storm {
                 let y = height as f32 * 256.0 / 7.0;
                 let z = self.offset;
                 let val = self.noise.noise_3d(x, y, z);
-                //let val = self.noise.billow_3d(16, x, y, z, 0.5, 0.5);
+                //let val = self.noise.billow_3d(4, x, y, z, 0.5, 0.5);
                 let hue: f32 = (val + 1.0) * 180.0;
-                let val = (val + 1.0) * 50.0;
+                let val = 10.0 + (val + 1.0) * 20.0;
                 let px = model.get_cylinder_pixel(angle, height);
                 *px = Color {
                     l: val,

@@ -16,7 +16,7 @@ pub struct Rainbow {
 
 impl Rainbow {
     pub fn new<T: Into<f32>>(color: Color, speed: T, step: T) -> Self {
-        let orient = Orientation::Horizontal;
+        let orient = Orientation::Spiral;
         let speed = speed.into();
         let step = step.into();
         Self {
