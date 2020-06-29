@@ -99,12 +99,13 @@ fn main() -> ! {
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
     //let mut effect = Storm::new(start_color, 0.01);
-    let mut effect = Rainbow::new(start_color, 5.0, 360.0 / 10.0);
+    let mut effect = Rainbow::new(start_color, 5.0, 360.0);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;
     loop {
-        effect.tick(&mut model);
+        effect.tick();
+        effect.render(&mut model);
         ctr += 1;
         if ctr == 30 {
             rprintln!("30 Ticks Complete");

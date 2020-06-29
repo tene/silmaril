@@ -1,4 +1,5 @@
-use crate::{Color, Lantern};
+use crate::{Color, Effect, Lantern, PixelIndex, PixelIndexable};
+use core::marker::PhantomData;
 use palette::Hue;
 
 pub enum Orientation {
@@ -7,15 +8,16 @@ pub enum Orientation {
     Spiral,
 }
 
-pub struct Rainbow {
+pub struct Rainbow<T: PixelIndexable> {
     pub color: Color,
     speed: f32,
     step: f32,
     orient: Orientation,
+    _pd: PhantomData<T>,
 }
 
-impl Rainbow {
-    pub fn new<T: Into<f32>>(color: Color, speed: T, step: T) -> Self {
+impl<T: PixelIndexable> Rainbow<T> {
+    pub fn new<F: Into<f32>>(color: Color, speed: F, step: F) -> Self {
         let orient = Orientation::Spiral;
         let speed = speed.into();
         let step = step.into();
@@ -24,24 +26,26 @@ impl Rainbow {
             speed,
             step,
             orient,
+            _pd: PhantomData,
         }
     }
-    pub fn tick(&mut self, model: &mut Lantern) {
+}
+
+impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
+    fn tick(&mut self) {
         self.color = self.color.shift_hue(self.speed);
-        for angle in 0..20 {
-            for height in 0..7 {
-                let px = model.get_cylinder_pixel(angle, height);
-                use Orientation::*;
-                match self.orient {
-                    Horizontal => *px = self.color.shift_hue(self.step * angle as f32),
-                    Vertical => *px = self.color.shift_hue(self.step * height as f32),
-                    Spiral => {
-                        *px = self
-                            .color
-                            .shift_hue(self.step * height as f32 + self.step * angle as f32)
-                    }
-                }
-            }
+    }
+    fn render(&self, model: &mut T) {
+        for idx in model.iter_pixels() {
+            let (dir, height) = idx.as_spherical();
+            use Orientation::*;
+            *model.get_mut(idx) = match self.orient {
+                Horizontal => self.color.shift_hue(self.step * dir),
+                Vertical => self.color.shift_hue(self.step * height),
+                Spiral => self
+                    .color
+                    .shift_hue(self.step * height / 2.0 + self.step * dir),
+            };
         }
     }
 }

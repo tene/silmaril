@@ -89,25 +89,68 @@ impl PixelIndexable for Lantern {
     fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color {
         &mut self.pixels[idx]
     }
-    fn index_to_cylindrical_coords(idx: PixelIndex<Self>) -> (f32, f32, f32) {
+    fn index_above(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
     }
-    fn index_to_cone_coords(idx: PixelIndex<Self>) -> (f32, f32) {
+    fn index_below(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
     }
-    fn index_to_face_xy(idx: PixelIndex<Self>) -> (usize, f32, f32) {
+    fn index_left(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
     }
-    fn index_above(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+    fn index_right(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
     }
-    fn index_below(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+    fn index_to_face(_idx: PixelIndex<Self>) -> Self::Face {
         todo!()
     }
-    fn index_left(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
-        todo!()
-    }
-    fn index_right(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
-        todo!()
+    fn index_to_spherical(idx: PixelIndex<Self>) -> (f32, f32) {
+        let i: usize = idx.into();
+        let face = i / 25;
+        let face_offset = i.rem_euclid(25);
+        let x = face_offset.rem_euclid(5);
+        let y = face_offset / 5;
+        if face < 4 {
+            // XXX TODO offset angle by 0.5 to match top
+            let angle = (face * 5 + x) as f32 / 20.0;
+            let height = (4 - y) as f32 / 7.0;
+            (angle, height)
+        } else {
+            let angle = TOP_IDX_ANGLE[face_offset];
+            let height = (7 - FACE_IDX_RADIUS[face_offset]) as f32 / 7.0;
+            (angle, height)
+        }
     }
 }
+
+const FACE_IDX_RADIUS: [usize; 25] = [
+    2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1, 0, 1, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2,
+];
+
+const TOP_IDX_ANGLE: [f32; 25] = [
+    8.0 / 16.0,
+    7.0 / 16.0,
+    6.0 / 16.0,
+    5.0 / 16.0,
+    4.0 / 16.0,
+    9.0 / 16.0,
+    4.0 / 9.0,
+    3.0 / 9.0,
+    2.0 / 9.0,
+    3.0 / 16.0,
+    10.0 / 16.0,
+    5.0 / 9.0,
+    0.0,
+    1.0 / 9.0,
+    2.0 / 16.0,
+    11.0 / 16.0,
+    6.0 / 9.0,
+    7.0 / 9.0,
+    0.0 / 9.0,
+    1.0 / 16.0,
+    12.0 / 16.0,
+    13.0 / 16.0,
+    14.0 / 16.0,
+    15.0 / 16.0,
+    0.0 / 16.0,
+];
