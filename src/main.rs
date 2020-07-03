@@ -76,7 +76,7 @@ fn main() -> ! {
         dp.SPI1,
         spi_pins,
         apa102_spi::MODE,
-        8_000_000.hz(),
+        1_000_000.hz(),
         //24_000_000.hz(),
         clocks,
     );
@@ -91,15 +91,16 @@ fn main() -> ! {
     // red: 0
     // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
     let _black = lch_color(0.0, 0.0, 0.0);
-    let start_color = lch_color(10.0, 10.0, 0.0);
+    let start_color = lch_color(10.0, 100.0, 300.0);
     //let framerate = 2.hz();
     //let mut timer = Timer::syst(cp.SYST, framerate, clocks);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
-    //let mut effect = Cloud::new(start_color, 0.01);
-    let mut effect = Rainbow::new(start_color, 2.0, 360.0);
+    let mut effect = Cloud::new(start_color, 0.01);
+    //let mut effect = Rainbow::new(start_color, 2.0, 360.0);
+    //let mut effect = Storm::new(0.01);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;
@@ -109,7 +110,7 @@ fn main() -> ! {
         ctr += 1;
         if ctr == 30 {
             rprintln!("30 Ticks Complete");
-            rprintln!("Color: {:?}", effect.color);
+            //rprintln!("Color: {:?}", effect.color);
             ctr = 0;
         }
         let mut buf = [[0; 3]; 125];

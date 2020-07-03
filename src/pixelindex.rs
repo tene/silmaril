@@ -36,10 +36,15 @@ pub trait PixelIndexable: Sized {
     const FACES: usize;
     fn get(&self, idx: PixelIndex<Self>) -> Color;
     fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color;
-    fn iter_pixels(&mut self) -> PixelIterator<Self> {
+    fn iter_pixels(&self) -> PixelIterator<Self> {
         PixelIterator::all()
     }
     fn index_to_face(idx: PixelIndex<Self>) -> Self::Face;
+    fn set_all(&mut self, color: Color) {
+        for px in self.iter_pixels() {
+            *(self.get_mut(px)) = color;
+        }
+    }
     /*
     fn index_to_cylindrical(idx: PixelIndex<Self>) -> (f32, f32, f32);
     fn index_to_face_xy(idx: PixelIndex<Self>) -> (Self::Face, f32, f32);
@@ -47,6 +52,7 @@ pub trait PixelIndexable: Sized {
     fn index_to_face_polar(idx: PixelIndex<Self>) -> (Self::Face, f32, f32);
     */
     fn index_to_spherical(idx: PixelIndex<Self>) -> (f32, f32);
+    fn index_to_row_col(idx: PixelIndex<Self>) -> (usize, usize);
 
     // XXX TODO Should this be Option?  Wrapping variant?
     fn index_above(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;

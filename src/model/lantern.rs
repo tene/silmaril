@@ -121,6 +121,9 @@ impl PixelIndexable for Lantern {
             (angle, height)
         }
     }
+    fn index_to_row_col(_idx: PixelIndex<Self>) -> (usize, usize) {
+        todo!()
+    }
 }
 
 const FACE_IDX_RADIUS: [usize; 25] = [
