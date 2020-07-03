@@ -1,6 +1,6 @@
-use crate::{Color, Effect, Lantern, PixelIndex, PixelIndexable};
+use crate::{Color, Effect, PixelIndexable};
 use core::marker::PhantomData;
-use palette::Hue;
+use palette::{Hue, Saturate};
 
 pub enum Orientation {
     Horizontal,
@@ -44,7 +44,8 @@ impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
                 Vertical => self.color.shift_hue(self.step * height),
                 Spiral => self
                     .color
-                    .shift_hue(self.step * height / 2.0 + self.step * dir),
+                    .shift_hue(self.step * height / 2.0 + self.step * dir)
+                    .saturate(height * 3.0),
             };
         }
     }

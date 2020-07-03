@@ -91,7 +91,7 @@ fn main() -> ! {
     // red: 0
     // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
     let _black = lch_color(0.0, 0.0, 0.0);
-    let start_color = lch_color(10.0, 15.0, 0.0);
+    let start_color = lch_color(10.0, 10.0, 0.0);
     //let framerate = 2.hz();
     //let mut timer = Timer::syst(cp.SYST, framerate, clocks);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
@@ -99,7 +99,7 @@ fn main() -> ! {
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
     //let mut effect = Storm::new(start_color, 0.01);
-    let mut effect = Rainbow::new(start_color, 5.0, 360.0);
+    let mut effect = Rainbow::new(start_color, 2.0, 360.0);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;
