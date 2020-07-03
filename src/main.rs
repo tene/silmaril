@@ -98,7 +98,7 @@ fn main() -> ! {
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
-    //let mut effect = Storm::new(start_color, 0.01);
+    //let mut effect = Cloud::new(start_color, 0.01);
     let mut effect = Rainbow::new(start_color, 2.0, 360.0);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");

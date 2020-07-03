@@ -4,14 +4,14 @@ use palette::Hue;
 //use rand::rngs::SmallRng;
 //use rand::{Rng, SeedableRng};
 //use rtt_target::rprintln;
-pub struct Storm {
+pub struct Cloud {
     pub color: Color,
     speed: f32,
     offset: f32,
     noise: Simplex,
 }
 
-impl Storm {
+impl Cloud {
     pub fn new(color: Color, speed: f32) -> Self {
         let noise = Simplex::new(137);
         let offset = 0.0.into();
