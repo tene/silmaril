@@ -1,4 +1,4 @@
-use crate::{math::noise::Simplex, Color, Effect, Lantern, PixelIndexable};
+use crate::{math::noise::Simplex, Color, Effect, PixelIndexable};
 use core::marker::PhantomData;
 //use num_traits::float::FloatCore;
 //use rand::rngs::SmallRng;

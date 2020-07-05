@@ -1,4 +1,5 @@
-use crate::{lch_to_rgb, pixelindex::*, Color};
+use crate::{lch_to_rgb, pixelindex::*, Color, FaceType};
+use num_traits::Float;
 use palette::{Hue, Saturate, Shade};
 
 pub struct Lantern {
@@ -34,6 +35,7 @@ impl Lantern {
             *px = px.shift_hue(d.into());
         }
     }
+    // TODO s/cylindrical/spherical
     pub fn get_cylinder_pixel(&mut self, angle: u8, height: u8) -> &mut Color {
         let face = (angle / 5).rem_euclid(4) as usize;
         let angle = angle.rem_euclid(20) as usize;
@@ -101,8 +103,9 @@ impl PixelIndexable for Lantern {
     fn index_right(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
     }
-    fn index_to_face(_idx: PixelIndex<Self>) -> Self::Face {
-        todo!()
+    fn index_to_face(idx: PixelIndex<Self>) -> Self::Face {
+        use LanternFace::*;
+        [South, East, North, West, Top][idx.usize() / 25]
     }
     fn index_to_spherical(idx: PixelIndex<Self>) -> (f32, f32) {
         let i: usize = idx.into();
@@ -123,6 +126,20 @@ impl PixelIndexable for Lantern {
     }
     fn index_to_row_col(_idx: PixelIndex<Self>) -> (usize, usize) {
         todo!()
+    }
+    fn index_to_face_type(idx: PixelIndex<Self>) -> FaceType {
+        match Self::index_to_face(idx) {
+            LanternFace::Top => FaceType::Top,
+            _ => FaceType::Side,
+        }
+    }
+    fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self> {
+        let x = ((dir % 1.0) * 19.99).trunc() as usize;
+        let y = ((height % 1.0) * 4.99).trunc() as usize;
+        let face_offset = (x / 5) * 25;
+        let row_offset = (4 - y) * 5;
+        let col_offset = x % 5;
+        (face_offset + row_offset + col_offset).into()
     }
 }
 

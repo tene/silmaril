@@ -19,7 +19,7 @@ use stm32f4xx_hal::{gpio::GpioExt, prelude::*, spi::Spi, stm32 as pac};
 extern crate panic_semihosting;
 //use panic_rtt_target as _;
 
-use silmaril::{effect::*, lch_color, Lantern};
+use silmaril::{effect::*, lch_color, Color, Lantern};
 
 #[entry]
 fn main() -> ! {
@@ -91,16 +91,18 @@ fn main() -> ! {
     // red: 0
     // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
     let _black = lch_color(0.0, 0.0, 0.0);
-    let start_color = lch_color(10.0, 100.0, 300.0);
+    //let start_color = lch_color(10.0, 100.0, 300.0);
     //let framerate = 2.hz();
     //let mut timer = Timer::syst(cp.SYST, framerate, clocks);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
     //let mut effect = Demo2::new(start_color, 7, 4);
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
-    let mut effect = Cloud::new(start_color, 0.01);
+    //let mut effect = Cloud::new(start_color, 0.01);
     //let mut effect = Rainbow::new(start_color, 2.0, 360.0);
-    //let mut effect = Storm::new(0.01);
+    let dim = Color::new(5.0, 0.0, 300.0);
+    let blue = Color::new(10.0, 50.0, 300.0);
+    let mut effect = Storm::new(dim, blue, 0.05, 0.01, 0.05);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;

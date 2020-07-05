@@ -1,6 +1,10 @@
 use crate::Color;
 use core::marker::PhantomData;
 
+pub enum FaceType {
+    Side,
+    Top,
+}
 pub enum PixelIterator<T: PixelIndexable> {
     All(PixelIndex<T>),
 }
@@ -36,13 +40,24 @@ pub trait PixelIndexable: Sized {
     const FACES: usize;
     fn get(&self, idx: PixelIndex<Self>) -> Color;
     fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color;
+    fn get_cylindrical_mut(&mut self, dir: f32, height: f32) -> &mut Color {
+        let idx = Self::cylindrical_to_index(dir, height);
+        self.get_mut(idx)
+    }
     fn iter_pixels(&self) -> PixelIterator<Self> {
         PixelIterator::all()
     }
+    fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self>;
     fn index_to_face(idx: PixelIndex<Self>) -> Self::Face;
+    fn index_to_face_type(idx: PixelIndex<Self>) -> FaceType;
     fn set_all(&mut self, color: Color) {
         for px in self.iter_pixels() {
             *(self.get_mut(px)) = color;
+        }
+    }
+    fn map_pixels<F: Fn(PixelIndex<Self>, Color) -> Color>(&mut self, f: F) {
+        for idx in self.iter_pixels() {
+            *self.get_mut(idx) = f(idx, self.get(idx));
         }
     }
     /*
@@ -79,6 +94,9 @@ where
     pub fn face(self) -> T::Face {
         T::index_to_face(self)
     }
+    pub fn face_type(self) -> FaceType {
+        T::index_to_face_type(self)
+    }
     pub fn up(self) -> Option<Self> {
         T::index_above(self)
     }
@@ -94,6 +112,9 @@ where
     /*pub fn around(self) -> dyn Iterator<Item = Self> {
         T::iter_around(self)
     }*/
+    pub fn usize(self) -> usize {
+        self.0
+    }
 }
 
 impl<T> Clone for PixelIndex<T> {

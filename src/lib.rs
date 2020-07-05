@@ -8,4 +8,4 @@ pub mod model;
 pub use model::lantern::Lantern;
 pub mod math;
 pub mod pixelindex;
-pub use pixelindex::{PixelIndex, PixelIndexable};
+pub use pixelindex::{FaceType, PixelIndex, PixelIndexable};
