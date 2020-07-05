@@ -13,7 +13,7 @@ pub struct Storm<T: PixelIndexable> {
     drop_speed: f32,
     offset: f32,
     noise: Simplex,
-    drops: [(f32, f32); NUM_DROPS],
+    drops: [(f32, f32, f32); NUM_DROPS],
     rng: SmallRng,
 }
 
@@ -29,9 +29,9 @@ impl<T: PixelIndexable> Storm<T> {
         let noise = Simplex::new(137);
         let _pd = PhantomData;
         let offset = 0.0;
-        let mut drops = [(0.0, 0.0); NUM_DROPS];
+        let mut drops = [(0.0, 0.0, 0.0); NUM_DROPS];
         for drop in drops.iter_mut() {
-            *drop = (rng.gen_range(0.0, 1.0), rng.gen_range(0.0, 1.0));
+            *drop = (rng.gen_range(0.0, 1.0), rng.gen_range(0.0, 1.0), 0.0);
         }
         Self {
             _pd,
@@ -61,22 +61,23 @@ impl<T: PixelIndexable> Effect<T> for Storm<T> {
                     let x = dir * 256.0;
                     let y = height * 2.0 + self.offset;
                     let val = self.noise.noise_2d(x, y);
-                    let l = (val + 1.0) * 50.0;
-                    let color = Color::new(l, 0.0, 300.0);
+                    let l = (val + 1.0) * 25.0;
+                    let color = Color::new(l, l, self.bg_color.hue);
                     *model.get_mut(idx) = color;
                 }
             }
         }
-        for &(dir, height) in &self.drops {
+        for &(dir, height, _speed) in &self.drops {
             *model.get_cylindrical_mut(dir, height) = self.drop_color;
         }
     }
     fn tick(&mut self) {
         self.offset += self.cloud_speed;
         for drop in self.drops.iter_mut() {
-            drop.1 -= self.drop_speed;
+            drop.1 -= drop.2;
+            drop.2 += self.drop_speed;
             if drop.1 < 0.0 {
-                *drop = (self.rng.gen_range(0.0, 1.0), 1.0);
+                *drop = (self.rng.gen_range(0.0, 1.0), 1.0, 0.0);
             }
         }
     }
