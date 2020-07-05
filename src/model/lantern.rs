@@ -94,8 +94,15 @@ impl PixelIndexable for Lantern {
     fn index_above(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
     }
-    fn index_below(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
-        todo!()
+    fn index_below(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        if idx.usize() >= 100 {
+            todo!();
+        }
+        if idx.usize() % 25 >= 20 {
+            None
+        } else {
+            Some(idx + 5)
+        }
     }
     fn index_left(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         todo!()
@@ -135,7 +142,7 @@ impl PixelIndexable for Lantern {
     }
     fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self> {
         let x = ((dir % 1.0) * 19.99).trunc() as usize;
-        let y = ((height % 1.0) * 4.99).trunc() as usize;
+        let y = ((height * 4.99) % 5.0).trunc() as usize;
         let face_offset = (x / 5) * 25;
         let row_offset = (4 - y) * 5;
         let col_offset = x % 5;

@@ -7,6 +7,7 @@ pub enum FaceType {
 }
 pub enum PixelIterator<T: PixelIndexable> {
     All(PixelIndex<T>),
+    Column(Option<PixelIndex<T>>),
 }
 
 impl<T: PixelIndexable> PixelIterator<T> {
@@ -30,6 +31,13 @@ impl<T: PixelIndexable> Iterator for PixelIterator<T> {
                     rv
                 }
             }
+            Column(px) => match px.take() {
+                Some(rv) => {
+                    *px = rv.down();
+                    Some(rv)
+                }
+                None => None,
+            },
         }
     }
 }
@@ -46,6 +54,9 @@ pub trait PixelIndexable: Sized {
     }
     fn iter_pixels(&self) -> PixelIterator<Self> {
         PixelIterator::all()
+    }
+    fn column_iter_mut(&self, col: f32) -> PixelIterator<Self> {
+        PixelIterator::Column(Some(Self::cylindrical_to_index(col, 1.0)))
     }
     fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self>;
     fn index_to_face(idx: PixelIndex<Self>) -> Self::Face;
@@ -101,13 +112,13 @@ where
         T::index_above(self)
     }
     pub fn down(self) -> Option<Self> {
-        T::index_above(self)
+        T::index_below(self)
     }
     pub fn left(self) -> Option<Self> {
-        T::index_above(self)
+        T::index_left(self)
     }
     pub fn right(self) -> Option<Self> {
-        T::index_above(self)
+        T::index_right(self)
     }
     /*pub fn around(self) -> dyn Iterator<Item = Self> {
         T::iter_around(self)
