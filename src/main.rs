@@ -100,9 +100,9 @@ fn main() -> ! {
     //let mut effect = Solid::new(white, 0);
     //let mut effect = Cloud::new(start_color, 0.01);
     //let mut effect = Rainbow::new(start_color, 2.0, 360.0);
-    let dim = Color::new(5.0, 0.0, 300.0);
-    let blue = Color::new(10.0, 50.0, 300.0);
-    let mut effect = Storm::new(dim, blue, 0.05, 0.01, 0.05);
+    let dim = Color::new(5.0, 5.0, 305.0);
+    let drop = Color::new(0.0, 0.0, 305.0);
+    let mut effect = Storm::new(dim, drop, 0.05, 0.05, 0.05);
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;

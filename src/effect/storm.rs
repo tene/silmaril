@@ -1,4 +1,4 @@
-use crate::{math::noise::Simplex, Color, Effect, PixelIndex, PixelIndexable};
+use crate::{math::noise::Simplex, Color, Effect, PixelIndexable};
 use core::marker::PhantomData;
 use palette::Mix;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
