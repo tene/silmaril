@@ -52,6 +52,10 @@ pub trait PixelIndexable: Sized {
         let idx = Self::cylindrical_to_index(dir, height);
         self.get_mut(idx)
     }
+    fn get_spherical_mut(&mut self, dir: f32, height: f32) -> &mut Color {
+        let idx = Self::spherical_to_index(dir, height);
+        self.get_mut(idx)
+    }
     fn iter_pixels(&self) -> PixelIterator<Self> {
         PixelIterator::all()
     }
@@ -59,6 +63,7 @@ pub trait PixelIndexable: Sized {
         PixelIterator::Column(Some(Self::cylindrical_to_index(col, 1.0)))
     }
     fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self>;
+    fn spherical_to_index(dir: f32, height: f32) -> PixelIndex<Self>;
     fn index_to_face(idx: PixelIndex<Self>) -> Self::Face;
     fn index_to_face_type(idx: PixelIndex<Self>) -> FaceType;
     fn set_all(&mut self, color: Color) {

@@ -2,6 +2,7 @@ use crate::{lch_to_rgb, pixelindex::*, Color, FaceType};
 use num_traits::Float;
 use palette::{Hue, Saturate, Shade};
 
+// XXX TODO Rename to Cube
 pub struct Lantern {
     pub color: Color,
     pub pixels: [Color; 125],
@@ -142,11 +143,37 @@ impl PixelIndexable for Lantern {
     }
     fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self> {
         let x = ((dir % 1.0) * 19.99).trunc() as usize;
-        let y = ((height * 4.99) % 5.0).trunc() as usize;
+        let y = (height * 5.0).trunc().min(4.0).max(0.0) as usize;
         let face_offset = (x / 5) * 25;
         let row_offset = (4 - y) * 5;
         let col_offset = x % 5;
         (face_offset + row_offset + col_offset).into()
+    }
+    fn spherical_to_index(dir: f32, height: f32) -> PixelIndex<Self> {
+        if height < 5.0 / 8.0 {
+            return Self::cylindrical_to_index(dir, height * 8.0 / 5.0);
+        }
+        let r = 7 - (height * 8.0).trunc().min(7.0) as usize;
+        /* Top Indices
+        20 15 10 5 0
+        21 16 11 6 1
+        22 17 12 7 2
+        23 18 13 8 3
+        24 19 14 9 4
+        */
+        let top_id = match r {
+            0 => 12,
+            1 => {
+                let dir_index = ((dir * 8.0) % 8.0).trunc() as usize;
+                [8, 7, 6, 11, 16, 17, 18, 13][dir_index]
+            }
+            2 => {
+                let dir_index = ((dir * 16.0) % 16.0).trunc() as usize;
+                [4, 3, 2, 1, 0, 5, 10, 15, 20, 21, 22, 23, 24, 19, 14, 9][dir_index]
+            }
+            _ => unreachable!(),
+        };
+        (100 + top_id).into()
     }
 }
 
