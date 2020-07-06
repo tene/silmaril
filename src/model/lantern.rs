@@ -165,11 +165,11 @@ impl PixelIndexable for Lantern {
             0 => 12,
             1 => {
                 let dir_index = ((dir * 8.0) % 8.0).trunc() as usize;
-                [8, 7, 6, 11, 16, 17, 18, 13][dir_index]
+                [18, 13, 8, 7, 6, 11, 16, 17][dir_index]
             }
             2 => {
                 let dir_index = ((dir * 16.0) % 16.0).trunc() as usize;
-                [4, 3, 2, 1, 0, 5, 10, 15, 20, 21, 22, 23, 24, 19, 14, 9][dir_index]
+                [24, 19, 14, 9, 4, 3, 2, 1, 0, 5, 10, 15, 20, 21, 22, 23][dir_index]
             }
             _ => unreachable!(),
         };

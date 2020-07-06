@@ -102,13 +102,16 @@ fn main() -> ! {
     //let mut effect = Rainbow::new(start_color, 2.0, 360.0);
     let dim = Color::new(5.0, 5.0, 305.0);
     let drop = Color::new(0.0, 0.0, 305.0);
-    let mut effect = Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.015, 0.8);
+    let mut storm = Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.015, 0.8);
+    let mut sparks = Sparks::new(0.2, 0.0);
+    let effects: [&mut dyn Effect<Lantern>; 2] = [&mut storm, &mut sparks];
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;
+    let effect_id = 1;
     loop {
-        effect.tick();
-        effect.render(&mut model);
+        effects[effect_id].tick();
+        effects[effect_id].render(&mut model);
         ctr += 1;
         if ctr == 30 {
             rprintln!("30 Ticks Complete");
