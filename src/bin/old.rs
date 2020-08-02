@@ -91,7 +91,6 @@ fn main() -> ! {
     // red: 0
     // let _white = Color::new(1.0.into(), 0.0.into(), 0.0.into());
     let _black = lch_color(0.0, 0.0, 0.0);
-    //let start_color = lch_color(10.0, 100.0, 300.0);
     //let framerate = 2.hz();
     //let mut timer = Timer::syst(cp.SYST, framerate, clocks);
     //let mut buf: [RGB8; 125] = [RGB::new(0, 0, 0); 125];
@@ -99,16 +98,17 @@ fn main() -> ! {
     //let mut effect = Drops::new(start_color);
     //let mut effect = Solid::new(white, 0);
     //let mut effect = Cloud::new(start_color, 0.01);
-    //let mut effect = Rainbow::new(start_color, 2.0, 360.0);
+    let start_color = lch_color(10.0, 100.0, 300.0);
+    let mut rainbow = Rainbow::new(start_color, 2.0, 360.0);
     let dim = Color::new(5.0, 5.0, 305.0);
     let drop = Color::new(0.0, 0.0, 305.0);
     let mut storm = Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.015, 0.8);
     let mut sparks = Sparks::new(0.2, 0.0);
-    let effects: [&mut dyn Effect<Lantern>; 2] = [&mut storm, &mut sparks];
+    let effects: [&mut dyn Effect<Lantern>; 3] = [&mut storm, &mut rainbow, &mut sparks];
     let mut model = Lantern::new(_black);
     rprintln!("Starting loop");
     let mut ctr = 0usize;
-    let effect_id = 1;
+    let effect_id = 0;
     loop {
         effects[effect_id].tick();
         effects[effect_id].render(&mut model);
