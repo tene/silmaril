@@ -2,10 +2,22 @@ use crate::{Color, Effect, PixelIndexable};
 use core::marker::PhantomData;
 use palette::{Hue, Saturate};
 
+#[derive(Clone, Copy)]
 pub enum Orientation {
     Horizontal,
     Vertical,
     Spiral,
+}
+
+impl Orientation {
+    pub fn next(self) -> Self {
+        use Orientation::*;
+        match self {
+            Horizontal => Vertical,
+            Vertical => Spiral,
+            Spiral => Horizontal,
+        }
+    }
 }
 
 pub struct Rainbow<T: PixelIndexable> {
@@ -33,7 +45,7 @@ impl<T: PixelIndexable> Rainbow<T> {
 
 impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
     fn tick(&mut self) {
-        self.color = self.color.shift_hue(self.speed);
+        //self.color = self.color.shift_hue(self.speed);
     }
     fn render(&self, model: &mut T) {
         for idx in model.iter_pixels() {
@@ -48,5 +60,14 @@ impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
                     .saturate(height * 3.0),
             };
         }
+    }
+    fn rotate_cw(&mut self) {
+        self.color = self.color.shift_hue(self.speed);
+    }
+    fn rotate_ccw(&mut self) {
+        self.color = self.color.shift_hue(self.speed * -1.0);
+    }
+    fn click(&mut self) {
+        self.orient = self.orient.next();
     }
 }

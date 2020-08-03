@@ -9,3 +9,5 @@ pub use model::lantern::Lantern;
 pub mod math;
 pub mod pixelindex;
 pub use pixelindex::{FaceType, PixelIndex, PixelIndexable};
+pub mod rotary;
+pub use rotary::{Direction, Rotary};

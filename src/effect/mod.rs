@@ -17,6 +17,9 @@ pub use storm::Storm;
 pub trait Effect<T: PixelIndexable> {
     fn tick(&mut self);
     fn render(&self, model: &mut T);
+    fn rotate_cw(&mut self) {}
+    fn rotate_ccw(&mut self) {}
+    fn click(&mut self) {}
     //fn init(&mut self, model: &mut T) {}
     // XXX TODO input / control channels
 }
