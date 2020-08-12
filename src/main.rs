@@ -5,14 +5,14 @@ extern crate panic_semihosting;
 
 use apa102_spi::Apa102;
 use embedded_hal::digital::v2::OutputPin;
-use rtic::{app, cyccnt::U32Ext, pend};
+use rtic::{app, cyccnt::U32Ext};
 use rtt_target::{rprintln, rtt_init, set_print_channel};
 use silmaril::{effect::*, lch_color, Color, Direction, Lantern, Rotary};
 use smart_leds::SmartLedsWrite;
 use stm32f4xx_hal::{
     gpio::{
-        gpioa::{PA0, PA2, PA3, PA4, PA5, PA6, PA7},
-        gpiob::{PB13, PB14},
+        gpioa::{PA0, PA5, PA6, PA7},
+        gpiob::{PB12, PB13, PB14},
         gpioc::PC13,
         Alternate, Edge, ExtiPin, GpioExt, Input, Output, PullUp, PushPull, AF5,
     },
@@ -21,7 +21,7 @@ use stm32f4xx_hal::{
     stm32 as pac,
 };
 
-type Knob = Rotary<PA2<Input<PullUp>>, PA3<Input<PullUp>>>;
+type Knob = Rotary<PB14<Input<PullUp>>, PB13<Input<PullUp>>>;
 
 const PERIOD: u32 = 10_000_000;
 
@@ -44,7 +44,7 @@ const APP: () = {
         led: PC13<Output<PushPull>>,
         user: PA0<Input<PullUp>>,
         knob: Knob,
-        knob_click: PA4<Input<PullUp>>,
+        knob_click: PB12<Input<PullUp>>,
     }
     #[init(schedule = [tick])]
     fn init(cx: init::Context) -> init::LateResources {
@@ -70,6 +70,10 @@ const APP: () = {
         set_print_channel(channels.up.0);
 
         let mut dp = cx.device;
+
+        // Required for interrupts on GPIO ports
+        dp.RCC.apb2enr.write(|w| w.syscfgen().enabled());
+
         let rcc = dp.RCC.constrain();
         let clocks = rcc.cfgr.use_hse(25.mhz()).sysclk(100.mhz()).freeze();
         let gpioc = dp.GPIOC.split();
@@ -84,21 +88,21 @@ const APP: () = {
         user.trigger_on_edge(&mut dp.EXTI, Edge::RISING);
 
         let gpiob = dp.GPIOB.split();
-        let mut knob1 = gpioa.pa2.into_pull_up_input();
-        //let mut knob1 = gpiob.pb13.into_pull_up_input();
+        //let mut knob1 = gpioa.pa2.into_pull_up_input();
+        let mut knob1 = gpiob.pb14.into_pull_up_input();
         knob1.make_interrupt_source(&mut dp.SYSCFG);
         knob1.enable_interrupt(&mut dp.EXTI);
         knob1.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
-        let mut knob2 = gpioa.pa3.into_pull_up_input();
-        //let mut knob2 = gpiob.pb14.into_pull_up_input();
+        //let mut knob2 = gpioa.pa3.into_pull_up_input();
+        let mut knob2 = gpiob.pb13.into_pull_up_input();
         knob2.make_interrupt_source(&mut dp.SYSCFG);
         knob2.enable_interrupt(&mut dp.EXTI);
         knob2.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
-        let mut knob_click = gpioa.pa4.into_pull_up_input();
-        //let mut knob2 = gpiob.pb14.into_pull_up_input();
+        //let mut knob_click = gpioa.pa4.into_pull_up_input();
+        let mut knob_click = gpiob.pb12.into_pull_up_input();
         knob_click.make_interrupt_source(&mut dp.SYSCFG);
         knob_click.enable_interrupt(&mut dp.EXTI);
-        knob_click.trigger_on_edge(&mut dp.EXTI, Edge::RISING);
+        knob_click.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
         let knob = Rotary::new(knob1, knob2);
 
         let pa5 = gpioa.pa5.into_alternate_af5();
@@ -125,7 +129,6 @@ const APP: () = {
         let model = Lantern::new(black);
 
         cx.schedule.tick(cx.start + PERIOD.cycles()).unwrap();
-        pend(pac::interrupt::EXTI15_10);
 
         init::LateResources {
             model,
@@ -156,45 +159,36 @@ const APP: () = {
         cx.resources.user.clear_interrupt_pending_bit();
     }
 
-    #[task(binds = EXTI2, resources = [knob], spawn = [input], priority = 2)]
+    #[task(binds = EXTI15_10, resources = [knob, knob_click], spawn = [input], priority = 2)]
     fn knob1(cx: knob1::Context) {
         //cx.resources.effect.rotate_cw();
         if let Some(dir) = cx.resources.knob.update() {
             use Direction::*;
             match dir {
                 Clockwise => {
-                    cx.spawn.input(InputEvent::Clockwise);
+                    let _ = cx.spawn.input(InputEvent::Clockwise);
                 }
                 CounterClockwise => {
-                    cx.spawn.input(InputEvent::CounterClockwise);
+                    let _ = cx.spawn.input(InputEvent::CounterClockwise);
                 }
             }
         }
-        rprintln!("Knob");
-    }
-
-    #[task(binds = EXTI3, resources = [knob], spawn = [input], priority = 2)]
-    fn knob2(cx: knob2::Context) {
-        //cx.resources.effect.rotate_cw();
-        if let Some(dir) = cx.resources.knob.update() {
-            use Direction::*;
-            match dir {
-                Clockwise => {
-                    cx.spawn.input(InputEvent::Clockwise);
+        let knob_click: &mut _ = cx.resources.knob_click;
+        knob_click.clear_interrupt_pending_bit();
+        unsafe {
+            static mut CLICKED: bool = true;
+            match (knob_click.is_high().unwrap(), CLICKED) {
+                (true, false) => {
+                    CLICKED = true;
+                    let _ = cx.spawn.input(InputEvent::Click);
                 }
-                CounterClockwise => {
-                    cx.spawn.input(InputEvent::CounterClockwise);
+                (false, true) => {
+                    CLICKED = false;
                 }
+                _ => {}
             }
         }
         rprintln!("Knob");
-    }
-
-    #[task(binds = EXTI4, resources = [knob_click], spawn = [input])]
-    fn knob_click(cx: knob_click::Context) {
-        rprintln!("Knob button pushed");
-        cx.resources.knob_click.clear_interrupt_pending_bit();
-        cx.spawn.input(InputEvent::Click);
     }
 
     #[task(capacity=10, resources = [effect])]
