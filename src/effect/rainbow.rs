@@ -45,7 +45,7 @@ impl<T: PixelIndexable> Rainbow<T> {
 
 impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
     fn tick(&mut self) {
-        //self.color = self.color.shift_hue(self.speed);
+        self.color = self.color.shift_hue(self.speed);
     }
     fn render(&self, model: &mut T) {
         for idx in model.iter_pixels() {
@@ -62,10 +62,12 @@ impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
         }
     }
     fn rotate_cw(&mut self) {
-        self.color = self.color.shift_hue(self.speed);
+        //self.color = self.color.shift_hue(self.speed);
+        self.speed *= 1.1;
     }
     fn rotate_ccw(&mut self) {
-        self.color = self.color.shift_hue(self.speed * -1.0);
+        //self.color = self.color.shift_hue(self.speed * -1.0);
+        self.speed *= 0.9;
     }
     fn click(&mut self) {
         self.orient = self.orient.next();
