@@ -17,6 +17,7 @@ use stm32f4xx_hal::{
         Alternate, Edge, ExtiPin, GpioExt, Input, Output, PullUp, PushPull, AF5,
     },
     prelude::*,
+    pwm,
     spi::Spi,
     stm32 as pac,
 };
@@ -88,6 +89,13 @@ const APP: () = {
         user.trigger_on_edge(&mut dp.EXTI, Edge::RISING);
 
         let gpiob = dp.GPIOB.split();
+
+        let fan_pin = gpiob.pb4.into_alternate_af2();
+        let mut fan = pwm::tim3(dp.TIM3, fan_pin, clocks, 25u32.khz());
+        let fan_max_duty = fan.get_max_duty();
+        let _ = fan.set_duty(fan_max_duty / 2);
+        let _ = fan.enable();
+
         //let mut knob1 = gpioa.pa2.into_pull_up_input();
         let mut knob1 = gpiob.pb14.into_pull_up_input();
         knob1.make_interrupt_source(&mut dp.SYSCFG);
@@ -155,7 +163,7 @@ const APP: () = {
     #[task(binds = EXTI0, resources = [user, led])]
     fn user(cx: user::Context) {
         rprintln!("User button pushed");
-        cx.resources.led.toggle();
+        let _ = cx.resources.led.toggle();
         cx.resources.user.clear_interrupt_pending_bit();
     }
 
