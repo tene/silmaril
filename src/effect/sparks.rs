@@ -68,10 +68,13 @@ impl<T: PixelIndexable> Sparks<T> {
             rng,
         }
     }
+    pub fn default() -> Self {
+        Self::new(0.2, 0.0)
+    }
 }
 
 impl<T: PixelIndexable> Effect<T> for Sparks<T> {
-    fn render(&self, model: &mut T) {
+    fn render(&self, _color: Color, model: &mut T) {
         model.map_pixels(|_idx, px| {
             px.mix(&Color::new(0.0, 0.0, px.hue), self.fade)
                 .shift_hue(self.shift)
@@ -80,7 +83,7 @@ impl<T: PixelIndexable> Effect<T> for Sparks<T> {
             *model.get_spherical_mut(p.x, p.y) = p.color;
         }
     }
-    fn tick(&mut self) {
+    fn tick(&mut self, _color: &mut Color) {
         for p in self.sparks.iter_mut() {
             p.tick(0.001);
             if p.dy <= 0.0 {

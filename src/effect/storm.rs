@@ -55,10 +55,16 @@ impl<T: PixelIndexable> Storm<T> {
             rng,
         }
     }
+
+    pub fn default() -> Self {
+        let dim = Color::new(5.0, 5.0, 305.0);
+        let drop = Color::new(0.0, 0.0, 305.0);
+        Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.015, 0.8)
+    }
 }
 
 impl<T: PixelIndexable> Effect<T> for Storm<T> {
-    fn render(&self, model: &mut T) {
+    fn render(&self, _color: Color, model: &mut T) {
         for idx in model.iter_pixels() {
             match idx.face_type() {
                 crate::FaceType::Side => {
@@ -87,7 +93,7 @@ impl<T: PixelIndexable> Effect<T> for Storm<T> {
             }
         }
     }
-    fn tick(&mut self) {
+    fn tick(&mut self, _color: &mut Color) {
         self.offset += self.cloud_speed;
         for drop in self.drops.iter_mut() {
             if drop.1 < 0.0 {

@@ -7,7 +7,7 @@ use apa102_spi::Apa102;
 use embedded_hal::digital::v2::OutputPin;
 use rtic::{app, cyccnt::U32Ext};
 use rtt_target::{rprintln, rtt_init, set_print_channel};
-use silmaril::{effect::*, lch_color, Color, Direction, Lantern, Rotary};
+use silmaril::{effect::*, lch_color, Direction, Lantern, Rotary};
 use smart_leds::SmartLedsWrite;
 use stm32f4xx_hal::{
     gpio::{
@@ -40,8 +40,7 @@ const APP: () = {
                 ),
             >,
         >,
-        //effect: Storm<Lantern>,
-        effect: Rainbow<Lantern>,
+        effect: EffectManager<Lantern>,
         led: PC13<Output<PushPull>>,
         user: PA0<Input<PullUp>>,
         knob: Knob,
@@ -93,7 +92,7 @@ const APP: () = {
         let fan_pin = gpiob.pb4.into_alternate_af2();
         let mut fan = pwm::tim3(dp.TIM3, fan_pin, clocks, 25u32.khz());
         let fan_max_duty = fan.get_max_duty();
-        let _ = fan.set_duty(fan_max_duty / 2);
+        let _ = fan.set_duty(fan_max_duty / 3);
         let _ = fan.enable();
 
         //let mut knob1 = gpioa.pa2.into_pull_up_input();
@@ -128,11 +127,7 @@ const APP: () = {
         );
 
         let leds = Apa102::new(spi);
-        //let dim = Color::new(5.0, 5.0, 305.0);
-        //let drop = Color::new(0.0, 0.0, 305.0);
-        //let effect = Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.015, 0.8);
-        let red = Color::new(50.0, 100.0, 300.0);
-        let effect = Rainbow::new(red, 10.0, 360.0);
+        let effect = EffectManager::default();
         let black = lch_color(0.0, 0.0, 0.0);
         let model = Lantern::new(black);
 
