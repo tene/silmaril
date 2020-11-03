@@ -1,4 +1,4 @@
-use crate::{Color, PixelIndexable};
+use crate::{Color, Direction, InputEvent, Knobs, PixelIndexable};
 use rtt_target::rprintln;
 
 pub mod cloud;
@@ -101,8 +101,8 @@ impl<T: PixelIndexable> Effect<T> for EffectCycle<T> {
 }
 
 pub struct EffectManager<T: PixelIndexable> {
-    ec: EffectCycle<T>,
-    color: Color,
+    pub ec: EffectCycle<T>,
+    pub color: Color,
 }
 
 impl<T: PixelIndexable> EffectManager<T> {
@@ -117,22 +117,30 @@ impl<T: PixelIndexable> EffectManager<T> {
     }
 
     pub fn render(&self, model: &mut T) {
+        // TODO Here's where we should apply input feedback
         self.ec.render(self.color, model)
     }
-    // TODO Refactor to single input method
-    pub fn rotate_cw(&mut self) {
-        self.ec.rotate_cw()
-    }
 
-    pub fn rotate_ccw(&mut self) {
-        self.ec.rotate_ccw()
-    }
-
-    pub fn click(&mut self) {
-        self.ec.next();
-        rprintln!("{}", self.effect_name());
-    }
-    pub fn effect_name(&self) -> &'static str {
-        self.ec.name()
+    pub fn handle_event(&mut self, event: InputEvent) {
+        use Direction::*;
+        use InputEvent::*;
+        use Knobs::*;
+        match event {
+            Press(Knob1) => {
+                self.ec.next();
+                rprintln!("{}", self.ec.name());
+            }
+            Spin(Knob3, Clockwise) => {
+                self.ec.rotate_cw();
+            }
+            Spin(Knob3, CounterClockwise) => {
+                self.ec.rotate_ccw();
+            }
+            Press(Knob3) => {
+                self.ec.click();
+            }
+            Release(Knob3) => {}
+            _ => {}
+        }
     }
 }

@@ -7,7 +7,7 @@ use apa102_spi::Apa102;
 use embedded_hal::digital::v2::OutputPin;
 use rtic::{app, cyccnt::U32Ext};
 use rtt_target::{rprintln, rtt_init, set_print_channel};
-use silmaril::{effect::*, lch_color, Direction, Lantern, Rotary};
+use silmaril::{effect::*, lch_color, InputEvent, Knobs::*, Lantern, Rotary};
 use smart_leds::SmartLedsWrite;
 use stm32f4xx_hal::{
     gpio::{
@@ -166,15 +166,7 @@ const APP: () = {
     fn knob1(cx: knob1::Context) {
         //cx.resources.effect.rotate_cw();
         if let Some(dir) = cx.resources.knob.update() {
-            use Direction::*;
-            match dir {
-                Clockwise => {
-                    let _ = cx.spawn.input(InputEvent::Clockwise);
-                }
-                CounterClockwise => {
-                    let _ = cx.spawn.input(InputEvent::CounterClockwise);
-                }
-            }
+            let _ = cx.spawn.input(InputEvent::Spin(Knob1, dir));
         }
         let knob_click: &mut _ = cx.resources.knob_click;
         knob_click.clear_interrupt_pending_bit();
@@ -183,10 +175,11 @@ const APP: () = {
             match (knob_click.is_high().unwrap(), CLICKED) {
                 (true, false) => {
                     CLICKED = true;
-                    let _ = cx.spawn.input(InputEvent::Click);
+                    let _ = cx.spawn.input(InputEvent::Press(Knob1));
                 }
                 (false, true) => {
                     CLICKED = false;
+                    let _ = cx.spawn.input(InputEvent::Release(Knob1));
                 }
                 _ => {}
             }
@@ -194,13 +187,9 @@ const APP: () = {
         rprintln!("Knob");
     }
 
-    #[task(capacity=10, resources = [effect])]
-    fn input(cx: input::Context, input: InputEvent) {
-        match input {
-            InputEvent::Clockwise => cx.resources.effect.rotate_cw(),
-            InputEvent::CounterClockwise => cx.resources.effect.rotate_ccw(),
-            InputEvent::Click => cx.resources.effect.click(),
-        }
+    #[task(capacity=20, resources = [effect])]
+    fn input(cx: input::Context, event: InputEvent) {
+        cx.resources.effect.handle_event(event);
     }
 
     // Work around https://github.com/probe-rs/probe-rs/issues/300
@@ -215,9 +204,3 @@ const APP: () = {
         fn USART1();
     }
 };
-
-enum InputEvent {
-    Clockwise,
-    CounterClockwise,
-    Click,
-}
