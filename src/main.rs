@@ -22,7 +22,7 @@ use stm32f4xx_hal::{
     stm32 as pac,
 };
 
-type Knob = Rotary<PB14<Input<PullUp>>, PB13<Input<PullUp>>>;
+type Knob = Rotary<PB12<Input<PullUp>>, PB13<Input<PullUp>>>;
 
 const PERIOD: u32 = 10_000_000;
 
@@ -44,7 +44,7 @@ const APP: () = {
         led: PC13<Output<PushPull>>,
         user: PA0<Input<PullUp>>,
         knob: Knob,
-        knob_click: PB12<Input<PullUp>>,
+        knob_click: PB14<Input<PullUp>>,
     }
     #[init(schedule = [tick])]
     fn init(cx: init::Context) -> init::LateResources {
@@ -96,7 +96,7 @@ const APP: () = {
         let _ = fan.enable();
 
         //let mut knob1 = gpioa.pa2.into_pull_up_input();
-        let mut knob1 = gpiob.pb14.into_pull_up_input();
+        let mut knob1 = gpiob.pb12.into_pull_up_input();
         knob1.make_interrupt_source(&mut dp.SYSCFG);
         knob1.enable_interrupt(&mut dp.EXTI);
         knob1.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
@@ -106,7 +106,7 @@ const APP: () = {
         knob2.enable_interrupt(&mut dp.EXTI);
         knob2.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
         //let mut knob_click = gpioa.pa4.into_pull_up_input();
-        let mut knob_click = gpiob.pb12.into_pull_up_input();
+        let mut knob_click = gpiob.pb14.into_pull_up_input();
         knob_click.make_interrupt_source(&mut dp.SYSCFG);
         knob_click.enable_interrupt(&mut dp.EXTI);
         knob_click.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);

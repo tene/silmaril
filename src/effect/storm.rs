@@ -59,7 +59,7 @@ impl<T: PixelIndexable> Storm<T> {
     pub fn default() -> Self {
         let dim = Color::new(5.0, 5.0, 305.0);
         let drop = Color::new(0.0, 0.0, 305.0);
-        Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.015, 0.8)
+        Storm::new(dim, drop, 0.01, 0.05, 0.02, 0.15, 0.8)
     }
 }
 
