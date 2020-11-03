@@ -6,10 +6,12 @@ use stm32f4xx_hal::gpio::ExtiPin;
 
 /// Holds current/old state and both [`InputPin`](https://docs.rs/embedded-hal/0.2.3/embedded_hal/digital/v2/trait.InputPin.html)
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Rotary<A, B> {
+pub struct Rotary<A, B, C> {
     pin_a: A,
     pin_b: B,
+    pin_c: C,
     state: u8,
+    released: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -18,24 +20,58 @@ pub enum Direction {
     CounterClockwise,
 }
 
-impl<A, B> Rotary<A, B>
+impl Into<f32> for Direction {
+    fn into(self) -> f32 {
+        match self {
+            Direction::Clockwise => 1.0,
+            Direction::CounterClockwise => -1.0,
+        }
+    }
+}
+
+impl core::ops::Mul<f32> for Direction {
+    type Output = f32;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        let lhs: f32 = self.into();
+        lhs.mul(rhs)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Click {
+    Press,
+    Release,
+}
+
+impl<A, B, C> Rotary<A, B, C>
 where
     A: InputPin + ExtiPin,
     B: InputPin + ExtiPin,
+    C: InputPin + ExtiPin,
     A::Error: core::fmt::Debug,
     B::Error: core::fmt::Debug,
+    C::Error: core::fmt::Debug,
 {
-    /// Accepts two `InputPin`s, these will be read on every `update()`
+    /// Accepts three `InputPin`s, these will be read on every `update()`
     /// [InputPin]: https://docs.rs/embedded-hal/0.2.3/embedded_hal/digital/v2/trait.InputPin.html
-    pub fn new(pin_a: A, pin_b: B) -> Self {
+    pub fn new(pin_a: A, pin_b: B, pin_c: C) -> Self {
         Self {
             pin_a,
             pin_b,
+            pin_c,
             state: 0u8,
+            released: true,
         }
     }
+    // XXX TODO Maybe this should return InputEvents?
+    pub fn update(&mut self) -> (Option<Direction>, Option<Click>) {
+        let dir = self.update_dir();
+        let click = self.update_click();
+        (dir, click)
+    }
     /// Call `update` to evaluate the next state of the encoder, propagates errors from `InputPin` read
-    pub fn update(&mut self) -> Option<Direction> {
+    fn update_dir(&mut self) -> Option<Direction> {
         // use mask to get previous state value
         let mut s = self.state & 0b11;
         // move in the new state
@@ -55,5 +91,20 @@ where
             0b0010 | 0b0100 | 0b1011 | 0b1101 => Some(Direction::CounterClockwise),
             _ => None,
         }
+    }
+    fn update_click(&mut self) -> Option<Click> {
+        let rv = match (self.released, self.pin_c.is_high().unwrap()) {
+            (false, true) => {
+                self.released = true;
+                Some(Click::Release)
+            }
+            (true, false) => {
+                self.released = false;
+                Some(Click::Press)
+            }
+            _ => None,
+        };
+        self.pin_c.clear_interrupt_pending_bit();
+        rv
     }
 }

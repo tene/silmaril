@@ -55,9 +55,7 @@ impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
             *model.get_mut(idx) = match self.orient {
                 Horizontal => color.shift_hue(self.step * dir),
                 Vertical => color.shift_hue(self.step * height),
-                Spiral => color
-                    .shift_hue(self.step * height / 2.0 + self.step * dir)
-                    .saturate(height * 3.0),
+                Spiral => color.shift_hue(self.step * height / 2.0 + self.step * dir),
             };
         }
     }

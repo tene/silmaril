@@ -4,15 +4,20 @@
 extern crate panic_semihosting;
 
 use apa102_spi::Apa102;
-use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::digital::v2::{InputPin, OutputPin};
 use rtic::{app, cyccnt::U32Ext};
 use rtt_target::{rprintln, rtt_init, set_print_channel};
-use silmaril::{effect::*, lch_color, InputEvent, Knobs::*, Lantern, Rotary};
+use silmaril::{
+    effect::*,
+    lch_color, Click, InputEvent,
+    Knobs::{self, *},
+    Lantern, Rotary,
+};
 use smart_leds::SmartLedsWrite;
 use stm32f4xx_hal::{
     gpio::{
-        gpioa::{PA0, PA5, PA6, PA7},
-        gpiob::{PB12, PB13, PB14},
+        gpioa::{PA0, PA10, PA11, PA5, PA6, PA7, PA9},
+        gpiob::{PB12, PB13, PB14, PB5, PB6, PB7},
         gpioc::PC13,
         Alternate, Edge, ExtiPin, GpioExt, Input, Output, PullUp, PushPull, AF5,
     },
@@ -21,8 +26,6 @@ use stm32f4xx_hal::{
     spi::Spi,
     stm32 as pac,
 };
-
-type Knob = Rotary<PB12<Input<PullUp>>, PB13<Input<PullUp>>>;
 
 const PERIOD: u32 = 10_000_000;
 
@@ -43,8 +46,9 @@ const APP: () = {
         effect: EffectManager<Lantern>,
         led: PC13<Output<PushPull>>,
         user: PA0<Input<PullUp>>,
-        knob: Knob,
-        knob_click: PB14<Input<PullUp>>,
+        knob1: Rotary<PB13<Input<PullUp>>, PB12<Input<PullUp>>, PB14<Input<PullUp>>>,
+        knob2: Rotary<PA10<Input<PullUp>>, PA9<Input<PullUp>>, PA11<Input<PullUp>>>,
+        knob3: Rotary<PB6<Input<PullUp>>, PB5<Input<PullUp>>, PB7<Input<PullUp>>>,
     }
     #[init(schedule = [tick])]
     fn init(cx: init::Context) -> init::LateResources {
@@ -94,23 +98,48 @@ const APP: () = {
         let fan_max_duty = fan.get_max_duty();
         let _ = fan.set_duty(fan_max_duty / 3);
         let _ = fan.enable();
+        /*
+        B5  - k3b
+        B6  - k3a
+        B7  - k3c
+        ?8
+        A9  - k2b
+        A10 - k2a
+        A11 - k2c
+        B12 - k1b
+        B13 - k1a
+        B14 - k1c
+        ?15
+        */
 
-        //let mut knob1 = gpioa.pa2.into_pull_up_input();
-        let mut knob1 = gpiob.pb12.into_pull_up_input();
-        knob1.make_interrupt_source(&mut dp.SYSCFG);
-        knob1.enable_interrupt(&mut dp.EXTI);
-        knob1.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
-        //let mut knob2 = gpioa.pa3.into_pull_up_input();
-        let mut knob2 = gpiob.pb13.into_pull_up_input();
-        knob2.make_interrupt_source(&mut dp.SYSCFG);
-        knob2.enable_interrupt(&mut dp.EXTI);
-        knob2.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
-        //let mut knob_click = gpioa.pa4.into_pull_up_input();
-        let mut knob_click = gpiob.pb14.into_pull_up_input();
-        knob_click.make_interrupt_source(&mut dp.SYSCFG);
-        knob_click.enable_interrupt(&mut dp.EXTI);
-        knob_click.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
-        let knob = Rotary::new(knob1, knob2);
+        let mut knob1b = gpiob.pb12.into_pull_up_input();
+        let mut knob1a = gpiob.pb13.into_pull_up_input();
+        let mut knob1_click = gpiob.pb14.into_pull_up_input();
+        let mut knob2b = gpioa.pa9.into_pull_up_input();
+        let mut knob2a = gpioa.pa10.into_pull_up_input();
+        let mut knob2_click = gpioa.pa11.into_pull_up_input();
+        let mut knob3b = gpiob.pb5.into_pull_up_input();
+        let mut knob3a = gpiob.pb6.into_pull_up_input();
+        let mut knob3_click = gpiob.pb7.into_pull_up_input();
+        let mut input_pins: [&mut dyn ExtiPin; 9] = [
+            &mut knob1b,
+            &mut knob1a,
+            &mut knob1_click,
+            &mut knob2b,
+            &mut knob2a,
+            &mut knob2_click,
+            &mut knob3b,
+            &mut knob3a,
+            &mut knob3_click,
+        ];
+        for p in input_pins.iter_mut() {
+            p.make_interrupt_source(&mut dp.SYSCFG);
+            p.enable_interrupt(&mut dp.EXTI);
+            p.trigger_on_edge(&mut dp.EXTI, Edge::RISING_FALLING);
+        }
+        let knob1 = Rotary::new(knob1a, knob1b, knob1_click);
+        let knob2 = Rotary::new(knob2a, knob2b, knob2_click);
+        let knob3 = Rotary::new(knob3a, knob3b, knob3_click);
 
         let pa5 = gpioa.pa5.into_alternate_af5();
         let pa6 = gpioa.pa6.into_alternate_af5();
@@ -139,8 +168,9 @@ const APP: () = {
             effect,
             led,
             user,
-            knob,
-            knob_click,
+            knob1,
+            knob2,
+            knob3,
         }
     }
 
@@ -162,33 +192,38 @@ const APP: () = {
         cx.resources.user.clear_interrupt_pending_bit();
     }
 
-    #[task(binds = EXTI15_10, resources = [knob, knob_click], spawn = [input], priority = 2)]
+    #[task(binds = EXTI15_10, resources = [knob1, knob2, knob3], spawn = [input], priority = 2)]
     fn knob1(cx: knob1::Context) {
-        //cx.resources.effect.rotate_cw();
-        if let Some(dir) = cx.resources.knob.update() {
-            let _ = cx.spawn.input(InputEvent::Spin(Knob1, dir));
+        let events1 = handle_knob(cx.resources.knob1, Knob1);
+        let events2 = handle_knob(cx.resources.knob2, Knob2);
+        let events3 = handle_knob(cx.resources.knob3, Knob3);
+        for event in events1
+            .iter()
+            .chain(events2.iter())
+            .chain(events3.iter())
+            .flatten()
+        {
+            let _ = cx.spawn.input(*event);
         }
-        let knob_click: &mut _ = cx.resources.knob_click;
-        knob_click.clear_interrupt_pending_bit();
-        unsafe {
-            static mut CLICKED: bool = true;
-            match (knob_click.is_high().unwrap(), CLICKED) {
-                (true, false) => {
-                    CLICKED = true;
-                    let _ = cx.spawn.input(InputEvent::Press(Knob1));
-                }
-                (false, true) => {
-                    CLICKED = false;
-                    let _ = cx.spawn.input(InputEvent::Release(Knob1));
-                }
-                _ => {}
-            }
+    }
+    #[task(binds = EXTI9_5, resources = [knob1, knob2, knob3], spawn = [input], priority = 2)]
+    fn knob2(cx: knob2::Context) {
+        let events1 = handle_knob(cx.resources.knob1, Knob1);
+        let events2 = handle_knob(cx.resources.knob2, Knob2);
+        let events3 = handle_knob(cx.resources.knob3, Knob3);
+        for event in events1
+            .iter()
+            .chain(events2.iter())
+            .chain(events3.iter())
+            .flatten()
+        {
+            let _ = cx.spawn.input(*event);
         }
-        rprintln!("Knob");
     }
 
     #[task(capacity=20, resources = [effect])]
     fn input(cx: input::Context, event: InputEvent) {
+        //rprintln!("{:?}", event);
         cx.resources.effect.handle_event(event);
     }
 
@@ -204,3 +239,21 @@ const APP: () = {
         fn USART1();
     }
 };
+
+fn handle_knob<A, B, C>(knob: &mut Rotary<A, B, C>, kind: Knobs) -> [Option<InputEvent>; 2]
+where
+    A: InputPin + ExtiPin,
+    B: InputPin + ExtiPin,
+    C: InputPin + ExtiPin,
+    A::Error: core::fmt::Debug,
+    B::Error: core::fmt::Debug,
+    C::Error: core::fmt::Debug,
+{
+    let (dir, button) = knob.update();
+    let spin = dir.map(|d| InputEvent::Spin(kind, d));
+    let click = button.map(|e| match e {
+        Click::Press => InputEvent::Press(kind),
+        Click::Release => InputEvent::Release(kind),
+    });
+    [spin, click]
+}

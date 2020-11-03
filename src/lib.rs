@@ -10,8 +10,9 @@ pub mod math;
 pub mod pixelindex;
 pub use pixelindex::{FaceType, PixelIndex, PixelIndexable};
 pub mod rotary;
-pub use rotary::{Direction, Rotary};
+pub use rotary::{Click, Direction, Rotary};
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Knobs {
     Knob1,
     Knob2,
@@ -19,6 +20,7 @@ pub enum Knobs {
 }
 // XXX TODO Parameterize knob type
 // pub enum InputEvent<K> {
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum InputEvent {
     Spin(Knobs, Direction),
     Press(Knobs),

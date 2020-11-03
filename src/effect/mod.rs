@@ -1,4 +1,5 @@
 use crate::{Color, Direction, InputEvent, Knobs, PixelIndexable};
+use palette::{Hue, Limited, Saturate, Shade};
 use rtt_target::rprintln;
 
 pub mod cloud;
@@ -129,6 +130,15 @@ impl<T: PixelIndexable> EffectManager<T> {
             Press(Knob1) => {
                 self.ec.next();
                 rprintln!("{}", self.ec.name());
+            }
+            Spin(Knob1, dir) => {
+                self.color = self.color.lighten(dir * 0.02).clamp();
+                rprintln!("Luma: {}", self.color.l);
+            }
+            Spin(Knob2, dir) => {
+                self.color.chroma += dir * 2.0;
+                self.color.clamp_self();
+                rprintln!("Chroma: {}", self.color.chroma);
             }
             Spin(Knob3, Clockwise) => {
                 self.ec.rotate_cw();
