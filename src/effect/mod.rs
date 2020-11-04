@@ -1,5 +1,5 @@
 use crate::{Color, Direction, InputEvent, Knobs, PixelIndexable};
-use palette::{Hue, Limited, Saturate, Shade};
+use palette::{Limited, Shade};
 use rtt_target::rprintln;
 
 pub mod cloud;
@@ -30,7 +30,7 @@ pub enum EffectCycle<T: PixelIndexable> {
     Rainbow(Rainbow<T>),
     Solid(Solid),
     Storm(Storm<T>),
-    Sparks(Sparks<T>),
+    //Sparks(Sparks<T>),
 }
 
 impl<T: PixelIndexable> EffectCycle<T> {
@@ -39,18 +39,18 @@ impl<T: PixelIndexable> EffectCycle<T> {
     }
     pub fn prev(&mut self) {
         match self {
-            EffectCycle::Rainbow(_) => *self = EffectCycle::Sparks(Sparks::default()),
+            EffectCycle::Rainbow(_) => *self = EffectCycle::Storm(Storm::default()),
             EffectCycle::Solid(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
             EffectCycle::Storm(_) => *self = EffectCycle::Solid(Solid::default()),
-            EffectCycle::Sparks(_) => *self = EffectCycle::Storm(Storm::default()),
+            //EffectCycle::Sparks(_) => *self = EffectCycle::Storm(Storm::default()),
         }
     }
     pub fn next(&mut self) {
         match self {
             EffectCycle::Rainbow(_) => *self = EffectCycle::Solid(Solid::default()),
             EffectCycle::Solid(_) => *self = EffectCycle::Storm(Storm::default()),
-            EffectCycle::Storm(_) => *self = EffectCycle::Sparks(Sparks::default()),
-            EffectCycle::Sparks(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
+            EffectCycle::Storm(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
+            //EffectCycle::Sparks(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
         }
     }
     pub fn effect(&self) -> &dyn Effect<T> {
@@ -58,7 +58,7 @@ impl<T: PixelIndexable> EffectCycle<T> {
             EffectCycle::Rainbow(e) => e as &dyn Effect<T>,
             EffectCycle::Solid(e) => e as &dyn Effect<T>,
             EffectCycle::Storm(e) => e as &dyn Effect<T>,
-            EffectCycle::Sparks(e) => e as &dyn Effect<T>,
+            //EffectCycle::Sparks(e) => e as &dyn Effect<T>,
         }
     }
     pub fn effect_mut(&mut self) -> &mut dyn Effect<T> {
@@ -66,7 +66,7 @@ impl<T: PixelIndexable> EffectCycle<T> {
             EffectCycle::Rainbow(e) => e as &mut dyn Effect<T>,
             EffectCycle::Solid(e) => e as &mut dyn Effect<T>,
             EffectCycle::Storm(e) => e as &mut dyn Effect<T>,
-            EffectCycle::Sparks(e) => e as &mut dyn Effect<T>,
+            //EffectCycle::Sparks(e) => e as &mut dyn Effect<T>,
         }
     }
     pub fn name(&self) -> &'static str {
@@ -74,7 +74,7 @@ impl<T: PixelIndexable> EffectCycle<T> {
             EffectCycle::Rainbow(_) => "Rainbow",
             EffectCycle::Solid(_) => "Solid",
             EffectCycle::Storm(_) => "Storm",
-            EffectCycle::Sparks(_) => "Sparks",
+            //EffectCycle::Sparks(_) => "Sparks",
         }
     }
 }

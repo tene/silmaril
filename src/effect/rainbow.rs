@@ -1,6 +1,6 @@
 use crate::{Color, Effect, PixelIndexable};
 use core::marker::PhantomData;
-use palette::{Hue, Saturate};
+use palette::Hue;
 
 #[derive(Clone, Copy)]
 pub enum Orientation {
