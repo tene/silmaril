@@ -1,7 +1,7 @@
 use crate::{lch_to_rgb, pixelindex::*, Color, FaceType};
 use num_traits::Float;
 use palette::{Hue, Saturate, Shade};
-
+use typenum::{U125, U5};
 // XXX TODO Rename to Cube
 pub struct Lantern {
     pub color: Color,
@@ -84,20 +84,62 @@ pub enum LanternFace {
 
 impl PixelIndexable for Lantern {
     type Face = LanternFace;
-    const SIZE: usize = 125;
-    const FACES: usize = 5;
+    type SIZE = U125;
+    type FACES = U5;
     fn get(&self, idx: PixelIndex<Self>) -> Color {
         self.pixels[idx]
     }
     fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color {
         &mut self.pixels[idx]
     }
-    fn index_above(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
-        todo!()
+    /* Top Indices
+    20 15 10 5 0
+    21 16 11 6 1
+    22 17 12 7 2
+    23 18 13 8 3
+    24 19 14 9 4
+    */
+    fn index_above(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        if idx.usize() >= 100 {
+            let face_idx = idx.usize() - 100;
+            if face_idx == 12 {
+                return None;
+            }
+            let top_idx = [
+                6, 7, 7, 7, 8, 11, 12, 12, 12, 13, 11, 12, 12, 12, 13, 11, 12, 12, 12, 13, 16, 17,
+                17, 17, 18,
+            ][face_idx];
+            return Some(top_idx.into());
+        }
+        if idx.usize() % 25 < 5 {
+            let face_idx = idx.usize() % 25;
+            let top_idx = match idx.usize() / 25 {
+                0 => [24, 19, 14, 9, 4][face_idx],
+                1 => 4 - face_idx,
+                2 => face_idx * 5,
+                3 => 20 + face_idx,
+                _ => unreachable!(),
+            };
+            Some((top_idx + 100).into())
+        } else {
+            Some(idx - 5)
+        }
     }
+    /* Top Indices
+    20 15 10 5 0
+    21 16 11 6 1
+    22 17 12 7 2
+    23 18 13 8 3
+    24 19 14 9 4
+    */
     fn index_below(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
         if idx.usize() >= 100 {
-            todo!();
+            let face_idx = idx.usize() - 100;
+            let idx = [
+                29, 28, 27, 26, 4, 51, 100, 102, 104, 3, 52, 110, 113, 114, 2, 53, 120, 122, 124,
+                1, 75, 76, 77, 78, 0,
+            ][face_idx];
+            return Some(idx.into());
         }
         if idx.usize() % 25 >= 20 {
             None
@@ -105,11 +147,54 @@ impl PixelIndexable for Lantern {
             Some(idx + 5)
         }
     }
-    fn index_left(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
-        todo!()
+    fn index_left(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        if idx.usize() >= 100 {
+            let face_idx = idx.usize() - 100;
+            if face_idx == 12 {
+                return None;
+            }
+            let idx = [
+                1, 2, 3, 4, 9, 0, 7, 8, 13, 14, 5, 6, 12, 18, 19, 10, 11, 16, 17, 24, 15, 20, 21,
+                22, 23,
+            ][face_idx]
+                + 100;
+            return Some(idx.into());
+        }
+        let face_idx = idx.usize() % 25;
+        if face_idx / 5 == 0 {
+            let idx = (idx.usize() + 79) % 100;
+            Some(idx.into())
+        } else {
+            Some(idx - 1)
+        }
     }
-    fn index_right(_idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
-        todo!()
+    /* Top Indices
+    20 15 10 5 0
+    21 16 11 6 1
+    22 17 12 7 2
+    23 18 13 8 3
+    24 19 14 9 4
+    */
+    fn index_right(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>> {
+        if idx.usize() >= 100 {
+            let face_idx = idx.usize() - 100;
+            if face_idx == 12 {
+                return None;
+            }
+            let idx = [
+                5, 0, 1, 2, 3, 10, 11, 6, 7, 4, 15, 16, 12, 8, 9, 20, 17, 18, 13, 14, 21, 22, 23,
+                24, 19,
+            ][face_idx]
+                + 100;
+            return Some(idx.into());
+        }
+        let face_idx = idx.usize() % 25;
+        if face_idx / 5 == 4 {
+            let idx = (idx.usize() + 21) % 100;
+            Some(idx.into())
+        } else {
+            Some(idx + 1)
+        }
     }
     fn index_to_face(idx: PixelIndex<Self>) -> Self::Face {
         use LanternFace::*;

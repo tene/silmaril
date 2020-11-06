@@ -1,9 +1,11 @@
 use crate::{Color, Direction, InputEvent, Knobs, PixelIndexable};
+use generic_array::ArrayLength;
 use palette::{Limited, Shade};
 use rtt_target::rprintln;
 
 pub mod cloud;
 pub mod drops;
+pub mod flame;
 pub mod rainbow;
 pub mod solid;
 pub mod sparks;
@@ -11,6 +13,7 @@ pub mod storm;
 
 pub use cloud::Cloud;
 pub use drops::Drops;
+pub use flame::Flame;
 pub use rainbow::Rainbow;
 pub use solid::Solid;
 pub use sparks::Sparks;
@@ -22,24 +25,33 @@ pub trait Effect<T: PixelIndexable> {
     fn rotate_cw(&mut self) {}
     fn rotate_ccw(&mut self) {}
     fn click(&mut self) {}
-    //fn init(&mut self, model: &mut T) {}
+    fn init(&mut self, model: &mut T) {}
     // XXX TODO input / control channels
 }
 
-pub enum EffectCycle<T: PixelIndexable> {
+pub enum EffectCycle<T: PixelIndexable>
+where
+    T::SIZE: ArrayLength<f32>,
+{
+    Flame(Flame<T>),
     Rainbow(Rainbow<T>),
     Solid(Solid),
     Storm(Storm<T>),
     //Sparks(Sparks<T>),
 }
 
-impl<T: PixelIndexable> EffectCycle<T> {
+impl<T: PixelIndexable> EffectCycle<T>
+where
+    T::SIZE: ArrayLength<f32>,
+{
     pub fn new() -> Self {
-        Self::Rainbow(Rainbow::default())
+        //Self::Rainbow(Rainbow::default())
+        Self::Flame(Flame::default())
     }
     pub fn prev(&mut self) {
         match self {
-            EffectCycle::Rainbow(_) => *self = EffectCycle::Storm(Storm::default()),
+            EffectCycle::Flame(_) => *self = EffectCycle::Storm(Storm::default()),
+            EffectCycle::Rainbow(_) => *self = EffectCycle::Flame(Flame::default()),
             EffectCycle::Solid(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
             EffectCycle::Storm(_) => *self = EffectCycle::Solid(Solid::default()),
             //EffectCycle::Sparks(_) => *self = EffectCycle::Storm(Storm::default()),
@@ -47,14 +59,16 @@ impl<T: PixelIndexable> EffectCycle<T> {
     }
     pub fn next(&mut self) {
         match self {
+            EffectCycle::Flame(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
             EffectCycle::Rainbow(_) => *self = EffectCycle::Solid(Solid::default()),
             EffectCycle::Solid(_) => *self = EffectCycle::Storm(Storm::default()),
-            EffectCycle::Storm(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
+            EffectCycle::Storm(_) => *self = EffectCycle::Flame(Flame::default()),
             //EffectCycle::Sparks(_) => *self = EffectCycle::Rainbow(Rainbow::default()),
         }
     }
     pub fn effect(&self) -> &dyn Effect<T> {
         match self {
+            EffectCycle::Flame(e) => e as &dyn Effect<T>,
             EffectCycle::Rainbow(e) => e as &dyn Effect<T>,
             EffectCycle::Solid(e) => e as &dyn Effect<T>,
             EffectCycle::Storm(e) => e as &dyn Effect<T>,
@@ -63,6 +77,7 @@ impl<T: PixelIndexable> EffectCycle<T> {
     }
     pub fn effect_mut(&mut self) -> &mut dyn Effect<T> {
         match self {
+            EffectCycle::Flame(e) => e as &mut dyn Effect<T>,
             EffectCycle::Rainbow(e) => e as &mut dyn Effect<T>,
             EffectCycle::Solid(e) => e as &mut dyn Effect<T>,
             EffectCycle::Storm(e) => e as &mut dyn Effect<T>,
@@ -71,6 +86,7 @@ impl<T: PixelIndexable> EffectCycle<T> {
     }
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCycle::Flame(_) => "Flame",
             EffectCycle::Rainbow(_) => "Rainbow",
             EffectCycle::Solid(_) => "Solid",
             EffectCycle::Storm(_) => "Storm",
@@ -79,7 +95,10 @@ impl<T: PixelIndexable> EffectCycle<T> {
     }
 }
 
-impl<T: PixelIndexable> Effect<T> for EffectCycle<T> {
+impl<T: PixelIndexable> Effect<T> for EffectCycle<T>
+where
+    T::SIZE: ArrayLength<f32>,
+{
     fn rotate_cw(&mut self) {
         self.effect_mut().rotate_cw()
     }
@@ -101,12 +120,18 @@ impl<T: PixelIndexable> Effect<T> for EffectCycle<T> {
     }
 }
 
-pub struct EffectManager<T: PixelIndexable> {
+pub struct EffectManager<T: PixelIndexable>
+where
+    T::SIZE: ArrayLength<f32>,
+{
     pub ec: EffectCycle<T>,
     pub color: Color,
 }
 
-impl<T: PixelIndexable> EffectManager<T> {
+impl<T: PixelIndexable> EffectManager<T>
+where
+    T::SIZE: ArrayLength<f32>,
+{
     pub fn default() -> Self {
         let ec = EffectCycle::new();
         let color = Color::new(50.0, 100.0, 300.0);

@@ -37,6 +37,8 @@ smart-leds = "0.3.0"
 #fixed = "*"
 panic-semihosting = "0.5.4"
 cortex-m-rtic = "0.5.5"
+generic-array = "0.14.4"
+typenum = "1.12.0"
 
 [dependencies.itertools]
 version = "0.9.0"
@@ -70,4 +72,4 @@ features = ["libm"]
 [dependencies.palette]
 version = "0.5"
 default-features = false
-features = ["libm"]
+features = ["libm","named"]

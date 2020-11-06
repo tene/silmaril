@@ -1,5 +1,6 @@
 use crate::Color;
 use core::marker::PhantomData;
+use typenum::Unsigned;
 
 pub enum FaceType {
     Side,
@@ -23,7 +24,7 @@ impl<T: PixelIndexable> Iterator for PixelIterator<T> {
         match self {
             All(next) => {
                 let blah: usize = (*next).into();
-                if blah >= T::SIZE {
+                if blah >= T::SIZE::to_usize() {
                     None
                 } else {
                     let rv = Some(*next);
@@ -31,7 +32,7 @@ impl<T: PixelIndexable> Iterator for PixelIterator<T> {
                     rv
                 }
             }
-            Column(px) => match px.take() {
+            Column(px) => match Option::take(px) {
                 Some(rv) => {
                     *px = rv.down();
                     Some(rv)
@@ -44,8 +45,8 @@ impl<T: PixelIndexable> Iterator for PixelIterator<T> {
 
 pub trait PixelIndexable: Sized {
     type Face;
-    const SIZE: usize;
-    const FACES: usize;
+    type SIZE: Unsigned;
+    type FACES: Unsigned;
     fn get(&self, idx: PixelIndex<Self>) -> Color;
     fn get_mut(&mut self, idx: PixelIndex<Self>) -> &mut Color;
     fn get_cylindrical_mut(&mut self, dir: f32, height: f32) -> &mut Color {
