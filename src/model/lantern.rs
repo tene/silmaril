@@ -161,7 +161,7 @@ impl PixelIndexable for Lantern {
             return Some(idx.into());
         }
         let face_idx = idx.usize() % 25;
-        if face_idx / 5 == 0 {
+        if face_idx % 5 == 0 {
             let idx = (idx.usize() + 79) % 100;
             Some(idx.into())
         } else {
@@ -189,7 +189,7 @@ impl PixelIndexable for Lantern {
             return Some(idx.into());
         }
         let face_idx = idx.usize() % 25;
-        if face_idx / 5 == 4 {
+        if face_idx % 5 == 4 {
             let idx = (idx.usize() + 21) % 100;
             Some(idx.into())
         } else {
@@ -259,6 +259,10 @@ impl PixelIndexable for Lantern {
             _ => unreachable!(),
         };
         (100 + top_id).into()
+    }
+
+    fn index_top() -> Option<PixelIndex<Self>> {
+        Some(112.into())
     }
 }
 

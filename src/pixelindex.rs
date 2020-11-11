@@ -8,7 +8,8 @@ pub enum FaceType {
 }
 pub enum PixelIterator<T: PixelIndexable> {
     All(PixelIndex<T>),
-    Column(Option<PixelIndex<T>>),
+    Down(Option<PixelIndex<T>>),
+    Right(Option<PixelIndex<T>>, PixelIndex<T>),
 }
 
 impl<T: PixelIndexable> PixelIterator<T> {
@@ -32,9 +33,19 @@ impl<T: PixelIndexable> Iterator for PixelIterator<T> {
                     rv
                 }
             }
-            Column(px) => match Option::take(px) {
+            Down(px) => match Option::take(px) {
                 Some(rv) => {
                     *px = rv.down();
+                    Some(rv)
+                }
+                None => None,
+            },
+            Right(px, end) => match Option::take(px) {
+                Some(rv) => {
+                    let next = rv.right();
+                    if next != Some(*end) {
+                        *px = next;
+                    }
                     Some(rv)
                 }
                 None => None,
@@ -61,7 +72,7 @@ pub trait PixelIndexable: Sized {
         PixelIterator::all()
     }
     fn column_iter_mut(&self, col: f32) -> PixelIterator<Self> {
-        PixelIterator::Column(Some(Self::cylindrical_to_index(col, 1.0)))
+        PixelIterator::Down(Some(Self::cylindrical_to_index(col, 1.0)))
     }
     fn cylindrical_to_index(dir: f32, height: f32) -> PixelIndex<Self>;
     fn spherical_to_index(dir: f32, height: f32) -> PixelIndex<Self>;
@@ -91,6 +102,7 @@ pub trait PixelIndexable: Sized {
     fn index_below(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
     fn index_left(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
     fn index_right(idx: PixelIndex<Self>) -> Option<PixelIndex<Self>>;
+    fn index_top() -> Option<PixelIndex<Self>>;
     /*
     fn index_rotate_x(idx: PixelIndex<Self>, turns: f32) -> Option<PixelIndex<Self>>;
     fn index_rotate_y(idx: PixelIndex<Self>, turns: f32) -> Option<PixelIndex<Self>>;
@@ -99,8 +111,15 @@ pub trait PixelIndexable: Sized {
     //fn iter_neighbours
     */
 }
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Ord, PartialOrd, Eq, Hash)]
 pub struct PixelIndex<T>(usize, PhantomData<T>);
+
+impl<T> PartialEq for PixelIndex<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.eq(&other.0)
+    }
+}
+
 impl<T> PixelIndex<T>
 where
     T: PixelIndexable,
@@ -131,6 +150,12 @@ where
     }*/
     pub fn usize(self) -> usize {
         self.0
+    }
+    pub fn iter_down(self) -> PixelIterator<T> {
+        PixelIterator::Down(Some(self))
+    }
+    pub fn iter_right(self) -> PixelIterator<T> {
+        PixelIterator::Right(Some(self), self)
     }
 }
 

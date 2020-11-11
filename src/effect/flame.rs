@@ -4,6 +4,7 @@ use generic_array::{ArrayLength, GenericArray};
 use num_traits::Float;
 use palette::{Limited, Saturate, Shade};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
+use rtt_target::{rprint, rprintln};
 
 pub struct Flame<T: PixelIndexable>
 where
@@ -40,7 +41,7 @@ where
             match idx.down() {
                 Some(src) => {
                     self.cells[idx.usize()] =
-                        (self.cells[src.usize()] - self.rng.gen_range(0.0, 0.35)).max(0.0);
+                        (self.cells[src.usize()] - self.rng.gen_range(0.0, 0.25)).max(0.0);
                 }
                 None => {
                     self.cells[idx.usize()] = self.rng.gen_range(0.875, 1.0);
@@ -63,12 +64,33 @@ where
         if self.rng.gen_ratio(1, 200) {
             self.wind = self.rng.gen_range(-1.0, 1.0);
         }
+        if self.rng.gen_ratio(1, 200) {
+            if let Some(top) = T::index_top() {
+                for (row_count, row) in top.iter_down().enumerate() {
+                    rprint!("{}: ", row_count);
+                    for (px_count, px) in row.iter_right().enumerate() {
+                        rprint!("{:.2}, ", self.cells[px.usize()]);
+                        if px_count > 20 {
+                            rprintln!("\nRow overflow on row {}", row_count);
+                            break;
+                        }
+                    }
+                    rprint!("\n");
+                }
+            }
+        }
     }
 
     fn render(&self, color: Color, model: &mut T) {
         for idx in model.iter_pixels() {
             let val = self.cells[idx.usize()];
-            *model.get_mut(idx) = color.darken(1.0 - val).desaturate(1.0 - val).clamp();
+            //*model.get_mut(idx) = color.darken(1.0 - val).desaturate(1.0 - val).clamp();
+            //*model.get_mut(idx) = color.darken(val).desaturate(1.0 - val).clamp();
+            *model.get_mut(idx) = Color {
+                l: color.l * val,
+                chroma: color.chroma * val,
+                ..color
+            };
         }
     }
 
@@ -78,4 +100,10 @@ where
             *model.get_mut(idx) = Color::new(0.0, 0.0, 0.0);
         }
     }
+
+    fn rotate_cw(&mut self) {}
+
+    fn rotate_ccw(&mut self) {}
+
+    fn click(&mut self) {}
 }
