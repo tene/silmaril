@@ -11,6 +11,8 @@ pub mod pixelindex;
 pub use pixelindex::{FaceType, PixelIndex, PixelIndexable};
 pub mod rotary;
 pub use rotary::{Click, Direction, Rotary};
+pub mod tick;
+pub use tick::Tick;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Knobs {

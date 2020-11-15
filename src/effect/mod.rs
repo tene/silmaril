@@ -134,7 +134,7 @@ where
 {
     pub fn default() -> Self {
         let ec = EffectCycle::new();
-        let color = Color::new(30.0, 80.0, 36.0);
+        let color = Color::new(30.0, 120.0, 36.0);
         Self { ec, color }
     }
 

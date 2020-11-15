@@ -44,15 +44,15 @@ where
             cells,
             wind: 0.0,
             gust_duration: 200,
-            flow_max: 0.9,
-            flow_min: 0.4,
-            cool_max: 0.2,
-            cool_min: 0.0,
+            flow_max: 0.5,
+            flow_min: 0.1,
+            cool_max: 0.1,
+            cool_min: 0.02,
             fuel_min: 0.95,
             fuel_max: 2.0,
             heat_min: 0.0,
             heat_max: 2.5,
-            hue_shift: 60.0,
+            hue_shift: 70.0,
             rng,
             _phantom: PhantomData,
         }
@@ -130,7 +130,7 @@ where
     fn tick(&mut self, _color: &mut Color) {
         let px_iter: PixelIterator<T> = PixelIterator::all();
         for idx in px_iter {
-            self.cool(idx);
+            //self.cool(idx);
             self.blow(idx);
             self.rise(idx);
             self.feed(idx);
@@ -147,7 +147,7 @@ where
     fn render(&self, color: Color, model: &mut T) {
         for idx in model.iter_pixels() {
             let val = self.cells[idx.usize()].max(0.0).min(1.0);
-            let val = val * val;
+            //let val = val * val;
             //*model.get_mut(idx) = color.darken(1.0 - val).desaturate(1.0 - val).clamp();
             //*model.get_mut(idx) = color.darken(val).desaturate(1.0 - val).clamp();
             if val > self.heat_min {
