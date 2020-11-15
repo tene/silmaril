@@ -59,15 +59,15 @@ impl<T: PixelIndexable> Effect<T> for Rainbow<T> {
             };
         }
     }
-    fn rotate_cw(&mut self) {
+    fn rotate_cw(&mut self, _color: &mut Color) {
         //self.color = self.color.shift_hue(self.speed);
         self.speed *= 1.1;
     }
-    fn rotate_ccw(&mut self) {
+    fn rotate_ccw(&mut self, _color: &mut Color) {
         //self.color = self.color.shift_hue(self.speed * -1.0);
         self.speed *= 0.9;
     }
-    fn click(&mut self) {
+    fn click(&mut self, _color: &mut Color) {
         self.orient = self.orient.next();
     }
 }

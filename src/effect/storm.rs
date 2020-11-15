@@ -109,11 +109,11 @@ impl<T: PixelIndexable> Effect<T> for Storm<T> {
             self.bolt.1 *= self.bolt_fade;
         }
     }
-    fn rotate_cw(&mut self) {
+    fn rotate_cw(&mut self, _color: &mut Color) {
         //self.bg_color.chroma = 50.0;
         self.bg_color = self.bg_color.lighten(0.1);
     }
-    fn rotate_ccw(&mut self) {
+    fn rotate_ccw(&mut self, _color: &mut Color) {
         //self.bg_color.chroma = 0.0;
         self.bg_color = self.bg_color.darken(0.1);
     }

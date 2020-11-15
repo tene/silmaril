@@ -106,10 +106,13 @@ impl PixelIndexable for Lantern {
                 return None;
             }
             let top_idx = [
-                6, 7, 7, 7, 8, 11, 12, 12, 12, 13, 11, 12, 12, 12, 13, 11, 12, 12, 12, 13, 16, 17,
-                17, 17, 18,
+                6, 7, 7, 7, 8, //
+                11, 12, 12, 12, 13, //
+                11, 12, 12, 12, 13, //
+                11, 12, 12, 12, 13, //
+                16, 17, 17, 17, 18,
             ][face_idx];
-            return Some(top_idx.into());
+            return Some((top_idx + 100).into());
         }
         if idx.usize() % 25 < 5 {
             let face_idx = idx.usize() % 25;

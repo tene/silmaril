@@ -23,7 +23,7 @@ edition = "2018"
 
 [profile.release]
 # gdb segfaults when loading lto=true binaries apparently
-# lto = true
+lto = true
 codegen-units = 1
 debug = true
 opt-level = "z"
@@ -35,7 +35,6 @@ embedded-hal = "0.2.4"
 apa102-spi = "0.3.2"
 smart-leds = "0.3.0"
 #fixed = "*"
-panic-semihosting = "0.5.4"
 cortex-m-rtic = "0.5.5"
 generic-array = "0.14.4"
 typenum = "1.12.0"
@@ -60,9 +59,9 @@ version = "0.6.4"
 features = ["cortex-m"]
 version = "0.2.2"
 
-#[dependencies.panic-rtt-target]
-#features = ["cortex-m"]
-#version = "*"
+[dependencies.panic-probe]
+version = "0.1.0"
+features = ["print-rtt"]
 
 [dependencies.num-traits]
 version = "0.2.12"

@@ -1,10 +1,9 @@
 #![no_std]
 #![no_main]
 
-extern crate panic_semihosting;
-
 use apa102_spi::Apa102;
 use embedded_hal::digital::v2::{InputPin, OutputPin};
+use panic_probe as _;
 use rtic::{app, cyccnt::U32Ext};
 use rtt_target::{rprintln, rtt_init, set_print_channel};
 use silmaril::{
@@ -161,6 +160,8 @@ const APP: () = {
         let model = Lantern::new(black);
 
         cx.schedule.tick(cx.start + PERIOD.cycles()).unwrap();
+
+        rprintln!("Silmaril!");
 
         init::LateResources {
             model,

@@ -22,10 +22,10 @@ pub use storm::Storm;
 pub trait Effect<T: PixelIndexable> {
     fn tick(&mut self, color: &mut Color);
     fn render(&self, color: Color, model: &mut T);
-    fn rotate_cw(&mut self) {}
-    fn rotate_ccw(&mut self) {}
-    fn click(&mut self) {}
-    fn init(&mut self, model: &mut T) {}
+    fn rotate_cw(&mut self, _color: &mut Color) {}
+    fn rotate_ccw(&mut self, _color: &mut Color) {}
+    fn click(&mut self, _color: &mut Color) {}
+    fn init(&mut self, _model: &mut T) {}
     // XXX TODO input / control channels
 }
 
@@ -99,16 +99,16 @@ impl<T: PixelIndexable> Effect<T> for EffectCycle<T>
 where
     T::SIZE: ArrayLength<f32>,
 {
-    fn rotate_cw(&mut self) {
-        self.effect_mut().rotate_cw()
+    fn rotate_cw(&mut self, color: &mut Color) {
+        self.effect_mut().rotate_cw(color)
     }
 
-    fn rotate_ccw(&mut self) {
-        self.effect_mut().rotate_ccw()
+    fn rotate_ccw(&mut self, color: &mut Color) {
+        self.effect_mut().rotate_ccw(color)
     }
 
-    fn click(&mut self) {
-        self.effect_mut().click()
+    fn click(&mut self, color: &mut Color) {
+        self.effect_mut().click(color)
     }
 
     fn tick(&mut self, color: &mut Color) {
@@ -134,7 +134,7 @@ where
 {
     pub fn default() -> Self {
         let ec = EffectCycle::new();
-        let color = Color::new(50.0, 100.0, 300.0);
+        let color = Color::new(30.0, 80.0, 36.0);
         Self { ec, color }
     }
 
@@ -166,13 +166,13 @@ where
                 rprintln!("Chroma: {}", self.color.chroma);
             }
             Spin(Knob3, Clockwise) => {
-                self.ec.rotate_cw();
+                self.ec.rotate_cw(&mut self.color);
             }
             Spin(Knob3, CounterClockwise) => {
-                self.ec.rotate_ccw();
+                self.ec.rotate_ccw(&mut self.color);
             }
             Press(Knob3) => {
-                self.ec.click();
+                self.ec.click(&mut self.color);
             }
             Release(Knob3) => {}
             _ => {}
